@@ -3,6 +3,7 @@ package uk.cg0.vortex.database.token
 enum class SqlToken {
     SELECT,
     INSERT,
+    UPDATE,
     WHERE,
     WHERE_EXTENDED,
     WHERE_NOT,

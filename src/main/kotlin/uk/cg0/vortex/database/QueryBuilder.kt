@@ -31,6 +31,17 @@ class QueryBuilder(val tableName: String) {
         return this
     }
 
+    fun update(vararg values: String): QueryBuilder {
+        val hashMap = HashMap<String, String>()
+
+        for (i in values.indices step 2) {
+            hashMap[values[i]] = values[i + 1]
+        }
+
+        tokens.add(SqlTokenData(SqlToken.UPDATE, arrayListOf(hashMap)))
+        return this
+    }
+
     /**
      * Run through the tokens reversed in order to build up a query to expose to a database query
      */
@@ -76,6 +87,25 @@ class QueryBuilder(val tableName: String) {
                     }
 
                     query += "INSERT INTO `$tableName` (${keys.joinToString(", ")}) VALUES (${variables.joinToString(", ")})"
+                }
+                SqlToken.UPDATE -> {
+                    if (query.isNotEmpty()) {
+                        throw DatabaseTokenPositionMismatchException(token.sqlToken)
+                    }
+                    if (mode != DatabaseMode.NOT_SET) {
+                        throw IllegalDatabaseTokenUnderModeException(token.sqlToken, mode)
+                    }
+
+                    val data = token.attributes[0] as HashMap<String, String>
+                    val values = ArrayList<String>()
+
+                    mode = DatabaseMode.UPDATE
+
+                    for (value in data) {
+                        values.add("`${value.key}`='${value.value}'")
+                    }
+
+                    query += "UPDATE `$tableName` SET ${values.joinToString(", ")} "
                 }
                 SqlToken.WHERE -> {
                     if (mode == DatabaseMode.NOT_SET) {

@@ -11,6 +11,10 @@ abstract class DatabaseModel {
         return QueryBuilder(tableName).insert(data).execute()
     }
 
+    fun update(vararg values: String): QueryBuilder {
+        return QueryBuilder(tableName).update(*values)
+    }
+
     fun where(key: String, value: String): QueryBuilder {
         return QueryBuilder(tableName).select(key, value)
     }
