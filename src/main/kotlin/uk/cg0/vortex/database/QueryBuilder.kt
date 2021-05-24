@@ -67,7 +67,7 @@ class QueryBuilder(val tableName: String) {
                         whereAlreadyGenerated = true
                         "WHERE ${token.attributes[0]} = ? "
                     }
-                    attributes.add(token.attributes[1])
+                    attributes.add(token.attributes[1].toString())
                 }
                 SqlToken.WHERE_EXTENDED -> {
                     if (mode == DatabaseMode.NOT_SET) {
@@ -85,7 +85,7 @@ class QueryBuilder(val tableName: String) {
                         whereAlreadyGenerated = true
                         "WHERE ${token.attributes[0]} ${token.attributes[1]} ? "
                     }
-                    attributes.add(token.attributes[2])
+                    attributes.add(token.attributes[2].toString())
                 }
                 SqlToken.WHERE_NOT -> {
                     if (mode == DatabaseMode.NOT_SET) {
@@ -103,7 +103,7 @@ class QueryBuilder(val tableName: String) {
                         whereAlreadyGenerated = true
                         "WHERE ${token.attributes[0]} NOT ? "
                     }
-                    attributes.add(token.attributes[1])
+                    attributes.add(token.attributes[1].toString())
                 }
                 SqlToken.WHERE_NOT_EXTENDED -> {
                     if (mode == DatabaseMode.NOT_SET) {
@@ -121,7 +121,7 @@ class QueryBuilder(val tableName: String) {
                         whereAlreadyGenerated = true
                         "WHERE ${token.attributes[0]} NOT ${token.attributes[1]} ? "
                     }
-                    attributes.add(token.attributes[2])
+                    attributes.add(token.attributes[2].toString())
                 }
                 SqlToken.OR_WHERE -> {
                     if (!whereAlreadyGenerated) {
@@ -137,7 +137,7 @@ class QueryBuilder(val tableName: String) {
                     }
 
                     query += "OR ${token.attributes[0]} = ? "
-                    attributes.add(token.attributes[1])
+                    attributes.add(token.attributes[1].toString())
                 }
                 SqlToken.OR_WHERE_EXTENDED -> {
                     if (!whereAlreadyGenerated) {
@@ -153,7 +153,7 @@ class QueryBuilder(val tableName: String) {
                     }
 
                     query += "OR ${token.attributes[0]} ${token.attributes[1]} ?"
-                    attributes.add(token.attributes[2])
+                    attributes.add(token.attributes[2].toString())
                 }
                 SqlToken.OR_WHERE_NOT -> {
                     if (!whereAlreadyGenerated) {
@@ -169,7 +169,7 @@ class QueryBuilder(val tableName: String) {
                     }
 
                     query += "OR WHERE ${token.attributes[0]} NOT ? $query"
-                    attributes.add(token.attributes[1])
+                    attributes.add(token.attributes[1].toString())
                 }
                 SqlToken.OR_WHERE_NOT_EXTENDED -> {
                     if (!whereAlreadyGenerated) {
@@ -185,7 +185,7 @@ class QueryBuilder(val tableName: String) {
                     }
 
                     query += "OR ${token.attributes[0]} NOT ${token.attributes[1]} ?"
-                    attributes.add(token.attributes[2])
+                    attributes.add(token.attributes[2].toString())
                 }
                 SqlToken.LIMIT -> {
                     if (mode != DatabaseMode.SELECT) {
