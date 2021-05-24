@@ -13,4 +13,5 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib"))
     testCompile("junit", "junit", "4.12")
+    implementation("mysql", "mysql-connector-java", "5.1.13")
 }

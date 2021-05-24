@@ -1,5 +1,6 @@
 package uk.cg0.vortex
 
+import uk.cg0.vortex.test.Test
 import uk.cg0.vortex.webserver.route.TestHome
 import uk.cg0.vortex.webserver.thread.HttpServerThread
 
@@ -19,6 +20,7 @@ fun main() {
 
     // Move later
     Vortex.routingEngine["/"] = TestHome()
+    Test.test()
 
     HttpServerThread().run()
 }
