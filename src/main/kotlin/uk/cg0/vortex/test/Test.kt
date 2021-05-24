@@ -3,8 +3,10 @@ package uk.cg0.vortex.test
 class Test {
     companion object {
         fun test() {
-//            val result = TestTable().select("id", "name", "email_address").where("name", "Connor").orWhere("name", "James").where("status", "active").get()
-//            println(result.first()["name"])
+            val result = TestTable().select("id", "name", "email_address").where("name", "Connor").orWhere("name", "James").where("status", "active").get()
+            val row = result.first()
+            row["name"] = "Test"
+            row.update()
 //
 //            val data = HashMap<String, String>()
 //            data["name"] = "Connor"
@@ -14,7 +16,7 @@ class Test {
 //            data["pos2"] = "1001"
 //            val insert = TestTable().insert(data)
 
-            println(TestTable().update("pos1", "1010", "pos2", "10").where("name", "Connor").execute())
+//            println(TestTable().update("pos1", "1010", "pos2", "10").where("name", "Connor").execute())
         }
     }
 }

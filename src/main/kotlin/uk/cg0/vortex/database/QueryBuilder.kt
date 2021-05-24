@@ -281,7 +281,7 @@ class QueryBuilder(val tableName: String) {
 
     fun get(): DatabaseResult {
         val tokenisedQuery = tokenise()
-        return DatabaseResult(Vortex.database.runQueryStatement(tokenisedQuery))
+        return DatabaseResult(Vortex.database.runQueryStatement(tokenisedQuery), tableName)
     }
 
     fun execute(): Boolean {

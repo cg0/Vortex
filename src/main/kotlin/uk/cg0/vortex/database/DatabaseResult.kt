@@ -2,7 +2,7 @@ package uk.cg0.vortex.database
 
 import java.sql.ResultSet
 
-class DatabaseResult(resultSet: ResultSet) {
+class DatabaseResult(resultSet: ResultSet, tableName: String) {
     private val rows = ArrayList<DatabaseRow>();
     init {
         val metadata = resultSet.metaData
@@ -14,7 +14,7 @@ class DatabaseResult(resultSet: ResultSet) {
             }
         }
 
-        rows.add(DatabaseRow(rowData))
+        rows.add(DatabaseRow(rowData, tableName))
     }
 
     operator fun iterator(): MutableIterator<DatabaseRow> {
