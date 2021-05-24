@@ -102,7 +102,8 @@ class QueryBuilder(val tableName: String) {
                     mode = DatabaseMode.UPDATE
 
                     for (value in data) {
-                        values.add("`${value.key}`='${value.value}'")
+                        values.add("`${value.key}`=?")
+                        attributes.add(value.value)
                     }
 
                     query += "UPDATE `$tableName` SET ${values.joinToString(", ")} "
