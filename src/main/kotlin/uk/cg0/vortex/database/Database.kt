@@ -43,4 +43,10 @@ class Database(host: String?, database: String?, username: String?, password: St
 
         return statement.executeQuery()
     }
+
+    fun runInsertStatement(query: TokenisedDatabaseQuery): Boolean {
+        val statement = prepareStatement(query)
+
+        return statement.execute()
+    }
 }

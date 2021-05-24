@@ -12,7 +12,7 @@ class QueryBuilder(val tableName: String) {
     private val tokens = ArrayList<SqlTokenData>()
 
     fun select(vararg fields: String): QueryBuilder {
-        tokens.add(SqlTokenData(SqlToken.SELECT, fields.toList() as ArrayList<String>))
+        tokens.add(SqlTokenData(SqlToken.SELECT, fields.toList() as ArrayList<Any>))
         return this
     }
 
@@ -23,6 +23,11 @@ class QueryBuilder(val tableName: String) {
 
     fun orWhere(key: String, value: String): QueryBuilder {
         tokens.add(SqlTokenData(SqlToken.OR_WHERE, arrayListOf(key, value)))
+        return this
+    }
+
+    fun insert(values: HashMap<String, String>): QueryBuilder {
+        tokens.add(SqlTokenData(SqlToken.INSERT, arrayListOf(values)))
         return this
     }
 
@@ -50,6 +55,27 @@ class QueryBuilder(val tableName: String) {
 
                     val selectAttributes = token.attributes.joinToString(", ")
                     query += "SELECT $selectAttributes FROM `$tableName` "
+                }
+                SqlToken.INSERT -> {
+                    if (query.isNotEmpty()) {
+                        throw DatabaseTokenPositionMismatchException(token.sqlToken)
+                    }
+                    if (mode != DatabaseMode.NOT_SET) {
+                        throw IllegalDatabaseTokenUnderModeException(token.sqlToken, mode)
+                    }
+
+                    val data = token.attributes[0] as HashMap<String, String>
+                    val keys = data.keys
+                    val variables = ArrayList<String>()
+
+                    mode = DatabaseMode.INSERT
+
+                    for (value in data) {
+                        variables.add("?")
+                        attributes.add(value.value)
+                    }
+
+                    query += "INSERT INTO `$tableName` (${keys.joinToString(", ")}) VALUES (${variables.joinToString(", ")})"
                 }
                 SqlToken.WHERE -> {
                     if (mode == DatabaseMode.NOT_SET) {
@@ -226,6 +252,11 @@ class QueryBuilder(val tableName: String) {
     fun get(): DatabaseResult {
         val tokenisedQuery = tokenise()
         return DatabaseResult(Vortex.database.runQueryStatement(tokenisedQuery))
+    }
+
+    fun execute(): Boolean {
+        val tokenisedQuery = tokenise()
+        return Vortex.database.runInsertStatement(tokenisedQuery)
     }
 
     /**

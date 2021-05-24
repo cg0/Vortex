@@ -7,6 +7,10 @@ abstract class DatabaseModel {
         return QueryBuilder(tableName).select(*fields)
     }
 
+    fun insert(data: HashMap<String, String>): Boolean {
+        return QueryBuilder(tableName).insert(data).execute()
+    }
+
     fun where(key: String, value: String): QueryBuilder {
         return QueryBuilder(tableName).select(key, value)
     }
