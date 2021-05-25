@@ -7,8 +7,8 @@ abstract class DatabaseModel {
         return QueryBuilder(tableName).select(*fields)
     }
 
-    fun insert(data: HashMap<String, String>): Boolean {
-        return QueryBuilder(tableName).insert(data).execute()
+    fun insert(vararg values: String): Boolean {
+        return QueryBuilder(tableName).insert(*values).execute()
     }
 
     fun update(vararg values: String): QueryBuilder {

@@ -3,6 +3,7 @@ package uk.cg0.vortex
 import uk.cg0.vortex.config.Config
 import uk.cg0.vortex.database.Database
 import uk.cg0.vortex.database.DatabaseModel
+import uk.cg0.vortex.database.migration.MigrationHandler
 import uk.cg0.vortex.webserver.RoutingEngine
 import uk.cg0.vortex.webserver.route.NotFoundRoute
 import uk.cg0.vortex.webserver.route.Route
@@ -12,6 +13,7 @@ class Vortex {
         val routingEngine = RoutingEngine()
         val config = Config()
         val database: Database
+        val migrationHandler = MigrationHandler()
 
         init {
             config.load(".env")

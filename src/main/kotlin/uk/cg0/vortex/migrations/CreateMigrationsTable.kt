@@ -1,0 +1,17 @@
+package uk.cg0.vortex.migrations
+
+import uk.cg0.vortex.database.Schema
+import uk.cg0.vortex.database.migration.Blueprint
+import uk.cg0.vortex.database.migration.DatabaseMigration
+
+class CreateMigrationsTable: DatabaseMigration {
+    override fun up() {
+        Schema.create("migrations") {
+            println(this::class.qualifiedName)
+        }
+    }
+
+    override fun down() {
+
+    }
+}

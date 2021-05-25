@@ -26,7 +26,13 @@ class QueryBuilder(val tableName: String) {
         return this
     }
 
-    fun insert(values: HashMap<String, String>): QueryBuilder {
+    fun insert(vararg values: String): QueryBuilder {
+        val hashMap = HashMap<String, String>()
+
+        for (i in values.indices step 2) {
+            hashMap[values[i]] = values[i + 1]
+        }
+
         tokens.add(SqlTokenData(SqlToken.INSERT, arrayListOf(values)))
         return this
     }

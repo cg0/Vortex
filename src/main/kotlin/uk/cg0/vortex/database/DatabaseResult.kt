@@ -24,4 +24,29 @@ class DatabaseResult(resultSet: ResultSet, tableName: String) {
     fun first(): DatabaseRow {
         return rows.first()
     }
+
+    fun last(): DatabaseRow {
+        return rows.last()
+    }
+
+    fun isEmpty(): Boolean {
+        return rows.isEmpty()
+    }
+
+    fun isNotEmpty(): Boolean {
+        return rows.isNotEmpty()
+    }
+
+    fun size(): Int {
+        return rows.size
+    }
+
+    fun contains(key: String, value: String): Boolean {
+        for (row in rows) {
+            if (row[key] == value) {
+                return true
+            }
+        }
+        return false
+    }
 }
