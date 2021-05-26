@@ -33,7 +33,7 @@ class QueryBuilder(val tableName: String) {
             hashMap[values[i]] = values[i + 1]
         }
 
-        tokens.add(SqlTokenData(SqlToken.INSERT, arrayListOf(values)))
+        tokens.add(SqlTokenData(SqlToken.INSERT, arrayListOf(hashMap)))
         return this
     }
 
