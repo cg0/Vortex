@@ -9,13 +9,13 @@ class DatabaseRow(private val rowData: HashMap<String, String>, private val tabl
         rowData[key] = value
     }
 
-    fun update(): Boolean {
+    fun update() {
         val values = ArrayList<String>()
 
         for (data in rowData) {
             values.add(data.key)
             values.add(data.value)
         }
-        return QueryBuilder(tableName).update(*values.toTypedArray()).where("id", this["id"].toString()).execute()
+        QueryBuilder(tableName).update(*values.toTypedArray()).where("id", this["id"].toString()).execute()
     }
 }
