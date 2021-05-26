@@ -27,7 +27,7 @@ class MigrationHandler {
                     migration.up()
                     Migration().insert(
                         "class_name", className,
-                        "batch_id", batch.toString()
+                        "batch_id", (batch + 1).toString()
                     )
                     println("$className: Success")
                 } catch (e: Exception) {
