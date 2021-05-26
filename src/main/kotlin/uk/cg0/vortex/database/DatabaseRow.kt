@@ -18,4 +18,8 @@ class DatabaseRow(private val rowData: HashMap<String, String>, private val tabl
         }
         QueryBuilder(tableName).update(*values.toTypedArray()).where("id", this["id"].toString()).execute()
     }
+
+    override fun toString(): String {
+        return rowData.toString()
+    }
 }
