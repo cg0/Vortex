@@ -12,7 +12,7 @@ class QueryBuilder(val tableName: String) {
     private val tokens = ArrayList<SqlTokenData>()
 
     fun select(vararg fields: String): QueryBuilder {
-        tokens.add(SqlTokenData(SqlToken.SELECT, fields.toList() as ArrayList<Any>))
+        tokens.add(SqlTokenData(SqlToken.SELECT, fields.toMutableList() as ArrayList<Any>))
         return this
     }
 

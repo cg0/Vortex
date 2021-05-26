@@ -1,11 +1,19 @@
 package uk.cg0.vortex.database.migration
 
+import uk.cg0.vortex.database.DatabaseRow
 import uk.cg0.vortex.models.Migration
 import java.lang.Exception
 
 class MigrationHandler {
     fun migrate(migrations: ArrayList<DatabaseMigration>) {
-        val processedMigrations = Migration().get()
+        var processedMigrations = ArrayList<DatabaseRow>()
+
+        // Will throw error if table doesn't exist as it may if we never ran the migration to create it
+        try {
+            processedMigrations = Migration().get().toArrayList()
+        } catch (exception: Exception) {
+
+        }
         var batch = 0
 
         if (processedMigrations.isNotEmpty()) {
@@ -27,5 +35,14 @@ class MigrationHandler {
                 }
             }
         }
+    }
+
+    private fun ArrayList<DatabaseRow>.contains(key: String, value: String): Boolean {
+        for (row in this) {
+            if (row[key] == value) {
+                return true
+            }
+        }
+        return false
     }
 }

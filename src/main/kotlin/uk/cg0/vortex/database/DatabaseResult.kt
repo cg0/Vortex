@@ -49,4 +49,8 @@ class DatabaseResult(resultSet: ResultSet, tableName: String) {
         }
         return false
     }
+
+    fun toArrayList(): ArrayList<DatabaseRow> {
+        return rows
+    }
 }

@@ -23,7 +23,7 @@ fun main() {
     Vortex.routingEngine["/"] = TestHome()
     Test.test()
 
-    CreateMigrationsTable().up()
+    Vortex.migrationHandler.migrate(arrayListOf(CreateMigrationsTable()))
 
     HttpServerThread().run()
 }
