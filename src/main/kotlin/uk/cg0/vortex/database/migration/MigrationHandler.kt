@@ -31,6 +31,7 @@ class MigrationHandler {
                     )
                     println("$className: Success")
                 } catch (e: Exception) {
+                    e.printStackTrace()
                     println("$className: Fail")
                 }
             }
