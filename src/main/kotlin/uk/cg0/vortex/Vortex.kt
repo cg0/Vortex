@@ -1,12 +1,12 @@
 package uk.cg0.vortex
 
 import uk.cg0.vortex.config.Config
+import uk.cg0.vortex.controller.Controller
 import uk.cg0.vortex.database.Database
-import uk.cg0.vortex.database.DatabaseModel
 import uk.cg0.vortex.database.migration.MigrationHandler
-import uk.cg0.vortex.webserver.RoutingEngine
-import uk.cg0.vortex.webserver.route.NotFoundRoute
-import uk.cg0.vortex.webserver.route.Route
+import uk.cg0.vortex.webserver.routing.RouteDirectory
+import uk.cg0.vortex.webserver.routing.RouteNode
+import uk.cg0.vortex.webserver.routing.RoutingEngine
 
 class Vortex {
     companion object {
@@ -27,8 +27,8 @@ class Vortex {
             return "0.0.1";
         }
 
-        fun getRoute(key: String): Route {
-            return routingEngine[key] ?: NotFoundRoute()
+        operator fun get(key: String): RouteNode {
+            return RouteDirectory(null)
         }
     }
 }

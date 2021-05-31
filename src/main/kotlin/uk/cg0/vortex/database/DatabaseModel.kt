@@ -16,7 +16,7 @@ abstract class DatabaseModel {
     }
 
     fun where(key: String, value: String): QueryBuilder {
-        return QueryBuilder(tableName).select(key, value)
+        return QueryBuilder(tableName).where(key, value)
     }
 
     fun get(): DatabaseResult {
