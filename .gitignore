@@ -194,3 +194,5 @@ gradle-app.setting
 **/build/
 
 # End of https://www.toptal.com/developers/gitignore/api/kotlin,intellij,gradle,linux,macos
+
+/src/main/kotlin/uk/cg0/vortex/test
