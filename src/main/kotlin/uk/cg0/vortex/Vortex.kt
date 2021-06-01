@@ -8,27 +8,21 @@ import uk.cg0.vortex.webserver.routing.RouteDirectory
 import uk.cg0.vortex.webserver.routing.RouteNode
 import uk.cg0.vortex.webserver.routing.RoutingEngine
 
-class Vortex {
-    companion object {
-        val routingEngine = RoutingEngine()
-        val config = Config()
-        val database: Database
-        val migrationHandler = MigrationHandler()
+object Vortex {
+    val routingEngine = RoutingEngine()
+    val config = Config()
+    val database: Database
+    val migrationHandler = MigrationHandler()
 
-        init {
-            config.load(".env")
-            database = Database(config["DB_HOST"],
-                config["DB_DATABASE"],
-                config["DB_USERNAME"],
-                config["DB_PASSWORD"])
-        }
+    init {
+        config.load(".env")
+        database = Database(config["DB_HOST"],
+            config["DB_DATABASE"],
+            config["DB_USERNAME"],
+            config["DB_PASSWORD"])
+    }
 
-        fun getVersion(): String {
-            return "0.0.1";
-        }
-
-        operator fun get(key: String): RouteNode {
-            return RouteDirectory(null)
-        }
+    fun getVersion(): String {
+        return "0.0.1";
     }
 }
