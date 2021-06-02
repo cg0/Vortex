@@ -12,7 +12,7 @@ data class Request(val httpVerb: HttpVerb,
                    val httpVersion: HttpVersion,
                    val headers: HashMap<String, String>,
                    val get: HashMap<String, String>,
-                   val postData: ByteArray) {
+                   private val postData: ByteArray) {
 
     val body: String by lazy {
         val reader = InputStreamReader(ByteArrayInputStream(postData))
