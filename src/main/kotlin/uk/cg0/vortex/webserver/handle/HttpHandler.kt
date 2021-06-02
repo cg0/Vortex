@@ -4,6 +4,7 @@ import uk.cg0.vortex.webserver.enum.HttpVerb
 import uk.cg0.vortex.webserver.enum.HttpVersion
 import uk.cg0.vortex.webserver.objects.Request
 import uk.cg0.vortex.webserver.objects.Response
+import java.io.ByteArrayOutputStream
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 
@@ -19,7 +20,7 @@ class HttpHandler() {
         var route = ""
         val headers = HashMap<String, String>()
         val get = HashMap<String, String>()
-        var body = ""
+        val outputStream = ByteArrayOutputStream()
 
         while (inputStreamReader.ready()) {
             val newChar = inputStreamReader.read().toChar()
@@ -78,12 +79,12 @@ class HttpHandler() {
                     }
                 }
                 HttpParsingState.BODY -> {
-                    body += newChar
+                    outputStream.write(newChar.toInt())
                 }
             }
         }
 
-        return Request(httpVerb, route, httpVersion, headers, get, HashMap(), body)
+        return Request(httpVerb, route, httpVersion, headers, get, outputStream.toByteArray())
     }
 
     fun handleOutput(writer: OutputStreamWriter, response: Response) {
