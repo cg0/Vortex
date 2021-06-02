@@ -18,6 +18,7 @@ class RoutingEngine {
 
     fun addRoute(httpVerb: HttpVerb, domain: String, path: String, controllerFunction: ControllerFunction) {
         val splitPath = ArrayList<String>(path.split("/"))
+        splitPath.removeAt(0)
 
         if (domain !in routes.keys) {
             routes[domain] = RouteDirectory(null)
