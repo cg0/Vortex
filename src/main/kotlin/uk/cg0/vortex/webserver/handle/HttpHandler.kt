@@ -18,8 +18,9 @@ class HttpHandler() {
         var httpVerb = HttpVerb.UNKNOWN
         var httpVersion = HttpVersion.UNKNOWN
         var route = ""
+        var getParamsString = ""
         val headers = HashMap<String, String>()
-        val get = HashMap<String, String>()
+        var getParams = HashMap<String, String>()
         val outputStream = ByteArrayOutputStream()
 
         while (inputStreamReader.ready()) {
@@ -35,12 +36,26 @@ class HttpHandler() {
                     }
                 }
                 HttpParsingState.HTTP_ROUTE -> {
+                    when (newChar) {
+                        ' ' -> {
+                            route = temp
+                            temp = ""
+                            parsingState = HttpParsingState.HTTP_VERSION
+                        }
+                        '?' -> {
+                            parsingState = HttpParsingState.HTTP_GET
+                        }
+                        else -> {
+                            temp += newChar
+                        }
+                    }
+                }
+                HttpParsingState.HTTP_GET -> {
                     if (newChar == ' ') {
-                        route = temp
-                        temp = ""
                         parsingState = HttpParsingState.HTTP_VERSION
+                        getParams = UrlEncodeHandler().handleRead(getParamsString)
                     } else {
-                        temp += newChar
+                        getParamsString += newChar
                     }
                 }
                 HttpParsingState.HTTP_VERSION -> {
@@ -84,7 +99,7 @@ class HttpHandler() {
             }
         }
 
-        return Request(httpVerb, route, httpVersion, headers, get, outputStream.toByteArray())
+        return Request(httpVerb, route, httpVersion, headers, getParams, outputStream.toByteArray())
     }
 
     fun handleOutput(writer: OutputStreamWriter, response: Response) {
@@ -100,6 +115,7 @@ class HttpHandler() {
     enum class HttpParsingState {
         HTTP_VERB, // GET, POST, HEAD
         HTTP_ROUTE, // /index for example
+        HTTP_GET, // If route has GET params
         HTTP_VERSION, // HTTP/1.1
         HEADER_KEY,
         HEADER_VALUE,
