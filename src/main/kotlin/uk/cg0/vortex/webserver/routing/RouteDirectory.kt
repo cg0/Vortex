@@ -10,7 +10,7 @@ open class RouteDirectory(override val parent: RouteNode?): RouteNode {
     val nodes = HashMap<String, RouteNode>()
 
     override operator fun get(httpVerb: HttpVerb, route: ArrayList<String>): ControllerFunction? {
-        val file = if (route.isEmpty()) {
+        val file = if (route.isEmpty() || route.first().isEmpty()) {
             "index"
         } else {
             route.first()
@@ -32,7 +32,7 @@ open class RouteDirectory(override val parent: RouteNode?): RouteNode {
         path: ArrayList<String>,
         controllerFunction: ControllerFunction
     ) {
-        if (path.isEmpty()) {
+        if (path.isEmpty() || path.first().isEmpty()) {
             if ("index" !in nodes) {
                 nodes["index"] = ControllerTailNode(this, EnumMap(HttpVerb::class.java))
             }
@@ -51,5 +51,9 @@ open class RouteDirectory(override val parent: RouteNode?): RouteNode {
             path.removeAt(0)
             nodes[pathElement]?.addRoute(httpVerb, path, controllerFunction)
         }
+    }
+
+    override fun toString(): String {
+        return nodes.toString()
     }
 }

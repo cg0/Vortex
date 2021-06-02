@@ -19,7 +19,8 @@ class HttpParserThread(private val socket: Socket): Runnable {
             val request = parser.handleInput(reader)
 
             writer = OutputStreamWriter(socket.getOutputStream())
-            val controller = Vortex.routingEngine[request.httpVerb, request.route]
+            val domain = request.headers["Host"]?.split(":")?.first() ?: "*"
+            val controller = Vortex.routingEngine[domain, request.httpVerb, request.route]
             val response = Response()
             if (controller == null) {
                 response.statusCode = HttpStatus.NOT_FOUND

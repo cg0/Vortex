@@ -2,7 +2,6 @@ package uk.cg0.vortex.webserver.routing
 
 import uk.cg0.vortex.controller.ControllerFunction
 import uk.cg0.vortex.webserver.enum.HttpVerb
-import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
@@ -13,7 +12,12 @@ class RoutingEngine {
     private val routes = HashMap<String, RouteDirectory>()
 
     fun addRoute(httpVerb: HttpVerb, path: String, controllerFunction: ControllerFunction) {
-        addRoute(httpVerb, "*", path, controllerFunction)
+        if (path.startsWith("/")) {
+            addRoute(httpVerb, "*", path, controllerFunction)
+        } else {
+            val splitPath = path.split("/")
+            addRoute(httpVerb, splitPath.first(), path, controllerFunction)
+        }
     }
 
     fun addRoute(httpVerb: HttpVerb, domain: String, path: String, controllerFunction: ControllerFunction) {
@@ -28,14 +32,17 @@ class RoutingEngine {
     }
 
     operator fun get(httpVerb: HttpVerb, path: String): ControllerFunction? {
-        val splitPath = ArrayList<String>(path.split("/"))
-        if (splitPath.first().startsWith("http")) {
-            val domain = splitPath[0]
-            splitPath.removeAt(0)
-            return routes[domain]?.get(httpVerb, splitPath)
+        return this["*", httpVerb, path]
+    }
+
+    operator fun get(domain: String, httpVerb: HttpVerb, path: String): ControllerFunction? {
+        if (domain !in routes.keys && routes.isNotEmpty()) {
+            return this["*", httpVerb, path]
         }
 
+        val splitPath = ArrayList<String>(path.split("/"))
+
         splitPath.removeAt(0)
-        return routes["*"]?.get(httpVerb, splitPath)
+        return routes[domain]?.get(httpVerb, splitPath)
     }
 }
