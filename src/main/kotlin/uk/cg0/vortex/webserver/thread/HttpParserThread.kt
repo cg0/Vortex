@@ -1,6 +1,7 @@
 package uk.cg0.vortex.webserver.thread
 
 import uk.cg0.vortex.Vortex
+import uk.cg0.vortex.webserver.enum.HttpContentType
 import uk.cg0.vortex.webserver.enum.HttpStatus
 import uk.cg0.vortex.webserver.handle.HttpHandler
 import uk.cg0.vortex.webserver.objects.Response
@@ -28,6 +29,9 @@ class HttpParserThread(private val socket: Socket): Runnable {
                 controller.execute(request, response)
             }
             response.headers["Content-Length"] = response.outputStream.size().toString()
+            response.headers["Content-Type"] = response.contentType.toString()
+            response.headers["Server"] = "Vortex"
+
             parser.handleOutput(writer, response)
         } catch (exception: Exception) {
             exception.printStackTrace()
