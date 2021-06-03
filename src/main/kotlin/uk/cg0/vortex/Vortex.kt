@@ -5,7 +5,9 @@ import uk.cg0.vortex.controller.Controller
 import uk.cg0.vortex.controller.ControllerFunction
 import uk.cg0.vortex.database.Database
 import uk.cg0.vortex.database.migration.MigrationHandler
+import uk.cg0.vortex.internal.InternalController
 import uk.cg0.vortex.migrations.CreateMigrationsTable
+import uk.cg0.vortex.webserver.enum.HttpStatus
 import uk.cg0.vortex.webserver.enum.HttpVerb
 import uk.cg0.vortex.webserver.routing.RouteDirectory
 import uk.cg0.vortex.webserver.routing.RouteNode
@@ -26,6 +28,10 @@ object Vortex {
             config["DB_DATABASE"],
             config["DB_USERNAME"],
             config["DB_PASSWORD"])
+
+        routingEngine.registerError(HttpStatus.NOT_FOUND, InternalController::class, InternalController::fileNotFound)
+        routingEngine.registerError(HttpStatus.INTERNAL_SERVER_ERROR, InternalController::class,
+            InternalController::internalServerError)
     }
 
     /**

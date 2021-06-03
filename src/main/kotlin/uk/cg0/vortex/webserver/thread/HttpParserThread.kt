@@ -21,13 +21,19 @@ class HttpParserThread(private val socket: Socket): Runnable {
 
             writer = OutputStreamWriter(socket.getOutputStream())
             val domain = request.headers["Host"]?.split(":")?.first() ?: "*"
-            val controller = Vortex.routingEngine[domain, request.httpVerb, request.route]
+            var controller = Vortex.routingEngine[domain, request.httpVerb, request.route]
             val response = Response()
             if (controller == null) {
-                response.statusCode = HttpStatus.NOT_FOUND
-            } else {
-                controller.execute(request, response)
+                controller = Vortex.routingEngine.getError(domain, HttpStatus.NOT_FOUND)
             }
+
+            try {
+                controller?.execute(request, response)
+            } catch (exception: Exception) {
+                controller = Vortex.routingEngine.getError(domain, HttpStatus.INTERNAL_SERVER_ERROR)
+                controller?.execute(request, response)
+            }
+
             response.headers["Content-Length"] = response.outputStream.size().toString()
             response.headers["Content-Type"] = response.contentType.toString()
             response.headers["Server"] = "Vortex"
