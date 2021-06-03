@@ -42,7 +42,10 @@ class RoutingEngine {
 
         val splitPath = ArrayList<String>(path.split("/"))
 
-        splitPath.removeAt(0)
         return routes[domain]?.get(httpVerb, splitPath)
+    }
+
+    override fun toString(): String {
+        return routes.toString()
     }
 }

@@ -99,7 +99,7 @@ class HttpHandler() {
             }
         }
 
-        return Request(httpVerb, route, httpVersion, headers, getParams, outputStream.toByteArray())
+        return Request(httpVerb, route, httpVersion, headers, getParams, outputStream.toByteArray(), HashMap())
     }
 
     fun handleOutput(writer: OutputStreamWriter, response: Response) {

@@ -10,15 +10,15 @@ open class RouteDirectory(override val parent: RouteNode?): RouteNode {
     val nodes = HashMap<String, RouteNode>()
 
     override operator fun get(httpVerb: HttpVerb, route: ArrayList<String>): ControllerFunction? {
+        route.removeAt(0)
         val file = if (route.isEmpty() || route.first().isEmpty()) {
             "index"
         } else {
             route.first()
         }
 
-        val node = nodes[file] ?: return null
+        val node = nodes[file] ?: nodes["*"] ?: return null
         if (node is RouteDirectory) {
-            route.removeAt(0)
             return node[httpVerb, route]
         } else if (node is TailNode) {
             return node[httpVerb]
@@ -43,9 +43,16 @@ open class RouteDirectory(override val parent: RouteNode?): RouteNode {
                 node[httpVerb] = controllerFunction
             }
         } else {
-            val pathElement = path.first()
-            if (pathElement !in nodes.keys) {
-                nodes[pathElement] = RouteDirectory(this)
+            var pathElement = path.first()
+            if (pathElement.startsWith("{") && pathElement.endsWith("}")) {
+                if ("*" !in nodes.keys) {
+                    nodes["*"] = RouteVariableWildcard(this, pathElement.drop(1).dropLast(1))
+                }
+                pathElement = "*"
+            } else {
+                if (pathElement !in nodes.keys) {
+                    nodes[pathElement] = RouteDirectory(this)
+                }
             }
 
             path.removeAt(0)

@@ -14,6 +14,7 @@ data class ControllerFunction(val controller: KClass<*>,
 
     fun execute(request: Request, response: Response) {
         val instance = controller.createInstance()
+        request.variables = variables
         function.call(instance, request, response)
     }
 }
