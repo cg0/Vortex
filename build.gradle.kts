@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "uk.cg0"
-version = "1.0-SNAPSHOT"
+version = "PRERELEASE"
 
 repositories {
     mavenCentral()
@@ -18,4 +18,12 @@ dependencies {
     implementation("org.jetbrains.kotlinx", "kotlinx-html-jvm", "0.7.3")
     implementation("org.jetbrains.kotlin", "kotlin-reflect", "1.5.10")
 
+}
+
+
+val jar by tasks.getting(Jar::class) {
+    manifest {
+        attributes["Implementation-Title"] = "Vortex"
+        attributes["Implementation-Version"] = version
+    }
 }

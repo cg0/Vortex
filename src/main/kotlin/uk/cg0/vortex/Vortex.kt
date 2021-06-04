@@ -21,6 +21,9 @@ object Vortex {
     val config = Config()
     val database: Database
     val migrationHandler = MigrationHandler()
+    val version: String by lazy {
+        Vortex::class.java.`package`.implementationVersion ?: "UNKNOWN"
+    }
 
     init {
         config.load(".env")
@@ -57,10 +60,6 @@ object Vortex {
 
         migrationHandler.migrate(arrayListOf(CreateMigrationsTable()))
         HttpServerThread().run()
-    }
-
-    fun getVersion(): String {
-        return "0.0.1";
     }
 
     /**
