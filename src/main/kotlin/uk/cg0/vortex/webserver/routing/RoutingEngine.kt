@@ -51,15 +51,15 @@ class RoutingEngine {
     }
 
     fun registerError(httpStatus: HttpStatus, kClass: KClass<*>, kFunction: KFunction<Unit>) {
-        registerError("*", httpStatus, kClass, kFunction)
+        registerError("*", httpStatus, kFunction)
     }
 
-    fun registerError(domain: String, httpStatus: HttpStatus, kClass: KClass<*>, kFunction: KFunction<Unit>) {
+    fun registerError(domain: String, httpStatus: HttpStatus, kFunction: KFunction<Unit>) {
         if (domain !in errors.keys) {
             errors[domain] = EnumMap(HttpStatus::class.java)
         }
 
-        errors[domain]?.set(httpStatus, ControllerFunction(kClass, kFunction))
+        errors[domain]?.set(httpStatus, ControllerFunction(kFunction))
     }
 
     fun getError(httpStatus: HttpStatus): ControllerFunction? {

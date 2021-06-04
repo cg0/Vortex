@@ -66,54 +66,49 @@ object Vortex {
      * Registers a GET route with the specified path
      *
      * @param path The full path to register, domains are optional
-     * @param controller A reference to the controller class
      * @param function A reference to the controller function
      */
-    fun get(path: String, controller: KClass<*>, function: KFunction<Unit>) {
-        routingEngine.addRoute(HttpVerb.GET, path, ControllerFunction(controller, function))
+    fun get(path: String, function: KFunction<Unit>) {
+        routingEngine.addRoute(HttpVerb.GET, path, ControllerFunction(function))
     }
 
     /**
      * Registers a POST route with the specified path
      *
      * @param path The full path to register, domains are optional
-     * @param controller A reference to the controller class
      * @param function A reference to the controller function
      */
-    fun post(path: String, controller: KClass<*>, function: KFunction<Unit>) {
-        routingEngine.addRoute(HttpVerb.POST, path, ControllerFunction(controller, function))
+    fun post(path: String, function: KFunction<Unit>) {
+        routingEngine.addRoute(HttpVerb.POST, path, ControllerFunction(function))
     }
 
     /**
      * Registers a PUT route with the specified path
      *
      * @param path The full path to register, domains are optional
-     * @param controller A reference to the controller class
      * @param function A reference to the controller function
      */
-    fun put(path: String, controller: KClass<*>, function: KFunction<Unit>) {
-        routingEngine.addRoute(HttpVerb.PUT, path, ControllerFunction(controller, function))
+    fun put(path: String, function: KFunction<Unit>) {
+        routingEngine.addRoute(HttpVerb.PUT, path, ControllerFunction(function))
     }
 
     /**
      * Registers a PATCH route with the specified path
      *
      * @param path The full path to register, domains are optional
-     * @param controller A reference to the controller class
      * @param function A reference to the controller function
      */
-    fun patch(path: String, controller: KClass<*>, function: KFunction<Unit>) {
-        routingEngine.addRoute(HttpVerb.PATCH, path, ControllerFunction(controller, function))
+    fun patch(path: String, function: KFunction<Unit>) {
+        routingEngine.addRoute(HttpVerb.PATCH, path, ControllerFunction(function))
     }
 
     /**
      * Registers a DELETE route with the specified path
      *
      * @param path The full path to register, domains are optional
-     * @param controller A reference to the controller class
      * @param function A reference to the controller function
      */
-    fun delete(path: String, controller: KClass<*>, function: KFunction<Unit>) {
-        routingEngine.addRoute(HttpVerb.DELETE, path, ControllerFunction(controller, function))
+    fun delete(path: String, function: KFunction<Unit>) {
+        routingEngine.addRoute(HttpVerb.DELETE, path, ControllerFunction(function))
     }
 }
