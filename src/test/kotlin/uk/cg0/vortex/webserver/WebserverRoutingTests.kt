@@ -20,7 +20,7 @@ class WebserverRoutingTests {
         class TestController: Controller {
             fun index(request: Request, response: Response) {}
         }
-        Vortex.get("/", TestController::class, TestController::index)
+        Vortex.get("/", TestController::index)
 
         val controllerFunction = Vortex.routingEngine[HttpVerb.GET, "/"]
         assertNotNull(controllerFunction)
@@ -40,8 +40,8 @@ class WebserverRoutingTests {
             fun indexTwo(request: Request, response: Response) {}
         }
 
-        Vortex.get("/", TestController::class, TestController::indexOne)
-        Vortex.get("foo.bar/", TestController::class, TestController::indexTwo)
+        Vortex.get("/", TestController::indexOne)
+        Vortex.get("foo.bar/", TestController::indexTwo)
 
         val indexOne = Vortex.routingEngine[HttpVerb.GET, "/"]
         val indexTwo = Vortex.routingEngine["foo.bar", HttpVerb.GET, "/"]
@@ -56,7 +56,7 @@ class WebserverRoutingTests {
         class TestController: Controller {
             fun index(request: Request, response: Response) {}
         }
-        Vortex.get("foo.bar/", TestController::class, TestController::index)
+        Vortex.get("foo.bar/", TestController::index)
 
         val controllerFunction = Vortex.routingEngine["foo.bar", HttpVerb.GET, "/"]
         assertNotNull(controllerFunction)
@@ -67,7 +67,7 @@ class WebserverRoutingTests {
         class TestController: Controller {
             fun index(request: Request, response: Response) {}
         }
-        Vortex.get("/test/{name}/somethingelse/{name2}", TestController::class, TestController::index)
+        Vortex.get("/test/{name}/somethingelse/{name2}", TestController::index)
 
         val controllerFunction = Vortex.routingEngine[HttpVerb.GET, "/test/Connor/somethingelse/Amy"]
         assertNotNull(controllerFunction)
@@ -81,8 +81,8 @@ class WebserverRoutingTests {
         class TestController: Controller {
             fun index(request: Request, response: Response) {}
         }
-        Vortex.get("/test/{foo}", TestController::class, TestController::index)
-        Vortex.get("/test/foo", TestController::class, TestController::index)
+        Vortex.get("/test/{foo}", TestController::index)
+        Vortex.get("/test/foo", TestController::index)
 
         val controllerFunctionStatic = Vortex.routingEngine[HttpVerb.GET, "/test/foo"]
         assertNotNull(controllerFunctionStatic)
