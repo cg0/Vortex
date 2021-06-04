@@ -76,4 +76,9 @@ class RoutingEngine {
     override fun toString(): String {
         return routes.toString()
     }
+
+    fun clear() {
+        routes.clear()
+        errors.clear()
+    }
 }
