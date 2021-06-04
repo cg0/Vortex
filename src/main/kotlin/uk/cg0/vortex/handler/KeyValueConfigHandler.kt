@@ -16,7 +16,7 @@ class KeyValueConfigHandler {
         val data = ArrayList<String>()
 
         for (key in hashMap.keys) {
-            data.add("\"$key=${hashMap[key]}")
+            data.add("$key=${hashMap[key]}")
         }
 
         return data
