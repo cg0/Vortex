@@ -1,7 +1,6 @@
 package uk.cg0.vortex
 
 import uk.cg0.vortex.config.Config
-import uk.cg0.vortex.controller.Controller
 import uk.cg0.vortex.controller.ControllerFunction
 import uk.cg0.vortex.database.Database
 import uk.cg0.vortex.database.migration.MigrationHandler
@@ -9,11 +8,8 @@ import uk.cg0.vortex.internal.InternalController
 import uk.cg0.vortex.migrations.CreateMigrationsTable
 import uk.cg0.vortex.webserver.enum.HttpStatus
 import uk.cg0.vortex.webserver.enum.HttpVerb
-import uk.cg0.vortex.webserver.routing.RouteDirectory
-import uk.cg0.vortex.webserver.routing.RouteNode
 import uk.cg0.vortex.webserver.routing.RoutingEngine
 import uk.cg0.vortex.webserver.thread.HttpServerThread
-import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 
 object Vortex {
@@ -69,7 +65,7 @@ object Vortex {
      * @param function A reference to the controller function
      */
     fun get(path: String, function: KFunction<Unit>) {
-        routingEngine.addRoute(HttpVerb.GET, path, ControllerFunction(function))
+        routingEngine[HttpVerb.GET, path] = ControllerFunction(function)
     }
 
     /**
@@ -79,7 +75,7 @@ object Vortex {
      * @param function A reference to the controller function
      */
     fun post(path: String, function: KFunction<Unit>) {
-        routingEngine.addRoute(HttpVerb.POST, path, ControllerFunction(function))
+        routingEngine[HttpVerb.POST, path] = ControllerFunction(function)
     }
 
     /**
@@ -89,7 +85,7 @@ object Vortex {
      * @param function A reference to the controller function
      */
     fun put(path: String, function: KFunction<Unit>) {
-        routingEngine.addRoute(HttpVerb.PUT, path, ControllerFunction(function))
+        routingEngine[HttpVerb.PUT, path] = ControllerFunction(function)
     }
 
     /**
@@ -99,7 +95,7 @@ object Vortex {
      * @param function A reference to the controller function
      */
     fun patch(path: String, function: KFunction<Unit>) {
-        routingEngine.addRoute(HttpVerb.PATCH, path, ControllerFunction(function))
+        routingEngine[HttpVerb.PATCH, path] = ControllerFunction(function)
     }
 
     /**
@@ -109,6 +105,6 @@ object Vortex {
      * @param function A reference to the controller function
      */
     fun delete(path: String, function: KFunction<Unit>) {
-        routingEngine.addRoute(HttpVerb.DELETE, path, ControllerFunction(function))
+        routingEngine[HttpVerb.DELETE, path] = ControllerFunction(function)
     }
 }

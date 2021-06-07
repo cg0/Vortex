@@ -5,11 +5,8 @@ import uk.cg0.vortex.webserver.enum.HttpVerb
 
 interface RouteNode {
     val parent: RouteNode?
+    val routeKey: String
 
     operator fun get(httpVerb: HttpVerb, route: ArrayList<String>): ControllerFunction?
-    fun addRoute(
-        httpVerb: HttpVerb,
-        path: ArrayList<String>,
-        controllerFunction: ControllerFunction
-    )
+    operator fun set(routeList: ArrayList<RouteNode>, controllerFunction: ControllerFunction)
 }
