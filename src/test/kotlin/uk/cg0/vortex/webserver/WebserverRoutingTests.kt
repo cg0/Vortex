@@ -1,10 +1,15 @@
 package uk.cg0.vortex.webserver
 
 import junit.framework.TestCase.*
+import kotlinx.html.html
+import kotlinx.html.stream.createHTML
 import org.junit.Before
 import org.junit.Test
 import uk.cg0.vortex.Vortex
 import uk.cg0.vortex.controller.Controller
+import uk.cg0.vortex.controller.Respondable
+import uk.cg0.vortex.template.Template
+import uk.cg0.vortex.test.TestTemplate
 import uk.cg0.vortex.webserver.enum.HttpVerb
 import uk.cg0.vortex.webserver.objects.Request
 import uk.cg0.vortex.webserver.objects.Response
