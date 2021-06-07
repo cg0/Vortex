@@ -3,6 +3,7 @@ package uk.cg0.vortex.webserver.routing
 import uk.cg0.vortex.controller.ControllerFunction
 import uk.cg0.vortex.webserver.enum.HttpStatus
 import uk.cg0.vortex.webserver.enum.HttpVerb
+import java.rmi.UnexpectedException
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
@@ -13,27 +14,43 @@ import kotlin.reflect.KFunction
  * Really basic routing engine that just takes string key to route value
  */
 class RoutingEngine {
-    private val routes = HashMap<String, RouteDirectory>()
+    private val routes = HashMap<String, DomainContainerNode>()
     private val errors = HashMap<String, EnumMap<HttpStatus, ControllerFunction>>()
 
-    fun addRoute(httpVerb: HttpVerb, path: String, controllerFunction: ControllerFunction) {
-        if (path.startsWith("/")) {
-            addRoute(httpVerb, "*", path, controllerFunction)
-        } else {
-            val splitPath = path.split("/")
-            addRoute(httpVerb, splitPath.first(), path, controllerFunction)
+    operator fun set(httpVerb: HttpVerb, path: String, controllerFunction: ControllerFunction) {
+        val splitPath = path.split("/")
+        val domain = splitPath.first()
+        val routeList = ArrayList<RouteNode>()
+
+        routeList.add(DomainContainerNode(domain.ifEmpty { "*" }))
+
+        for (part in splitPath.drop(1)) {
+            if (part.startsWith("{") && part.endsWith("}")) {
+                routeList.add(VariableContainerNode(routeList.last(), part.removeSurrounding("{", "}"), "*"))
+            } else {
+                routeList.add(ContainerNode(routeList.last(), part.ifBlank { "*" }))
+            }
         }
+
+        routeList.add(ControllerContainerNode(routeList.last()))
+
+        routeList.add(ControllerTailNode(routeList.last(), httpVerb.name, controllerFunction))
+
+        this[routeList] = controllerFunction
     }
 
-    fun addRoute(httpVerb: HttpVerb, domain: String, path: String, controllerFunction: ControllerFunction) {
-        val splitPath = ArrayList<String>(path.split("/"))
-        splitPath.removeAt(0)
+    operator fun set(routeList: ArrayList<RouteNode>, controllerFunction: ControllerFunction) {
+        val domainNode = routeList.removeFirst()
 
-        if (domain !in routes.keys) {
-            routes[domain] = RouteDirectory(null)
+        if (domainNode !is DomainContainerNode) {
+            throw UnexpectedException("The root node for the routing engine HAS to be a DomainContainerNode")
         }
 
-        routes[domain]?.addRoute(httpVerb, splitPath, controllerFunction)
+        if (domainNode.routeKey !in routes) {
+            routes[domainNode.routeKey] = domainNode
+        }
+
+        routes[domainNode.routeKey]?.set(routeList, controllerFunction)
     }
 
     operator fun get(httpVerb: HttpVerb, path: String): ControllerFunction? {

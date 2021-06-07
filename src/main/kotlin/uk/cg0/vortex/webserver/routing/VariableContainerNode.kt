@@ -3,7 +3,10 @@ package uk.cg0.vortex.webserver.routing
 import uk.cg0.vortex.controller.ControllerFunction
 import uk.cg0.vortex.webserver.enum.HttpVerb
 
-class RouteVariableWildcard(parent: RouteNode?, private val variableName: String): RouteDirectory(parent) {
+class VariableContainerNode(parent: RouteNode?,
+                            private val variableName: String,
+                            routeKey: String
+): ContainerNode(parent, routeKey) {
     override fun get(httpVerb: HttpVerb, route: ArrayList<String>): ControllerFunction? {
         val variable = route.first()
         val controllerFunction = super.get(httpVerb, route)
