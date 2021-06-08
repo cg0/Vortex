@@ -23,7 +23,7 @@ class WebserverRoutingTests {
     @Test
     fun `Do we correctly get back the page index`() {
         class TestController: Controller {
-            fun index(request: Request, response: Response) {}
+            fun index() {}
         }
         Vortex.get("/", TestController::index)
 
@@ -41,8 +41,8 @@ class WebserverRoutingTests {
     @Test
     fun `Can we register a route on one domain without affecting another`() {
         class TestController: Controller {
-            fun indexOne(request: Request, response: Response) {}
-            fun indexTwo(request: Request, response: Response) {}
+            fun indexOne() {}
+            fun indexTwo() {}
         }
 
         Vortex.get("/", TestController::indexOne)
@@ -59,7 +59,7 @@ class WebserverRoutingTests {
     @Test
     fun `Can we register routes on other domains`() {
         class TestController: Controller {
-            fun index(request: Request, response: Response) {}
+            fun index() {}
         }
         Vortex.get("foo.bar/", TestController::index)
 
@@ -70,7 +70,7 @@ class WebserverRoutingTests {
     @Test
     fun `Can we register a route variable`() {
         class TestController: Controller {
-            fun index(request: Request, response: Response) {}
+            fun index() {}
         }
         Vortex.get("/test/{name}/somethingelse/{name2}", TestController::index)
 
@@ -84,7 +84,7 @@ class WebserverRoutingTests {
     @Test
     fun `Can we register static responses to variable routes`() {
         class TestController: Controller {
-            fun index(request: Request, response: Response) {}
+            fun index() {}
         }
         Vortex.get("/test/{foo}", TestController::index)
         Vortex.get("/test/foo", TestController::index)
