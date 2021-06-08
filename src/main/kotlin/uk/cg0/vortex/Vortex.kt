@@ -64,7 +64,7 @@ object Vortex {
      * @param path The full path to register, domains are optional
      * @param function A reference to the controller function
      */
-    fun get(path: String, function: KFunction<Unit>) {
+    fun get(path: String, function: KFunction<Any>) {
         routingEngine[HttpVerb.GET, path] = ControllerFunction(function)
     }
 
