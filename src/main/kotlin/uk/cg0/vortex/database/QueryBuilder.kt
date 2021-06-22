@@ -1,318 +1,216 @@
 package uk.cg0.vortex.database
 
 import uk.cg0.vortex.Vortex
-import uk.cg0.vortex.database.exceptions.DatabaseTokenPositionMismatchException
-import uk.cg0.vortex.database.exceptions.IllegalDatabaseTokenUnderModeException
-import uk.cg0.vortex.database.exceptions.UnprocessableDatabaseTokenException
-import uk.cg0.vortex.database.token.SqlToken
-import uk.cg0.vortex.database.token.SqlTokenData
-import uk.cg0.vortex.database.token.TokenisedDatabaseQuery
+import uk.cg0.vortex.database.conditionals.Conditional
+import uk.cg0.vortex.database.conditionals.ConditionalType
+import uk.cg0.vortex.database.conditionals.ExternalPredicate
+import uk.cg0.vortex.database.conditionals.InlinePredicate
+import kotlin.collections.ArrayList
 
-class QueryBuilder(val tableName: String) {
-    private val tokens = ArrayList<SqlTokenData>()
+class QueryBuilder(private val table: DatabaseTable) {
+    private var mode = DatabaseMode.SELECT
+    private var selectFields = ArrayList<DatabaseColumn<*>>()
+    private val conditionals = ArrayList<Conditional>()
+    private var limit: Int? = null
+    private val columnData = HashMap<DatabaseColumn<*>, Any>()
 
-    fun select(vararg fields: String): QueryBuilder {
-        tokens.add(SqlTokenData(SqlToken.SELECT, fields.toMutableList() as ArrayList<Any>))
-        return this
+    private fun buildSelectFields(): ArrayList<DatabaseColumn<*>> {
+        selectFields = Vortex.database.getFieldsFromTableModel(table)
+        return selectFields
     }
 
-    fun where(key: String, value: String): QueryBuilder {
-        tokens.add(SqlTokenData(SqlToken.WHERE, arrayListOf(key, value)))
-        return this
-    }
 
-    fun orWhere(key: String, value: String): QueryBuilder {
-        tokens.add(SqlTokenData(SqlToken.OR_WHERE, arrayListOf(key, value)))
-        return this
-    }
+    fun select(vararg fields: DatabaseColumn<*>): QueryBuilder {
+        selectFields.clear()
 
-    fun insert(vararg values: String): QueryBuilder {
-        val hashMap = HashMap<String, String>()
-
-        for (i in values.indices step 2) {
-            hashMap[values[i]] = values[i + 1]
+        for (field in fields) {
+            selectFields.add(field)
         }
 
-        tokens.add(SqlTokenData(SqlToken.INSERT, arrayListOf(hashMap)))
         return this
     }
 
-    fun update(vararg values: String): QueryBuilder {
-        val hashMap = HashMap<String, String>()
-
-        for (i in values.indices step 2) {
-            hashMap[values[i]] = values[i + 1]
-        }
-
-        tokens.add(SqlTokenData(SqlToken.UPDATE, arrayListOf(hashMap)))
+    fun where(key: DatabaseColumn<*>, value: Any): QueryBuilder {
+        conditionals.add(Conditional(ConditionalType.AND, InlinePredicate(key, value, "=")))
         return this
     }
 
-    /**
-     * Run through the tokens reversed in order to build up a query to expose to a database query
-     */
-    private fun tokenise(): TokenisedDatabaseQuery {
-        var query = ""
-        val attributes = ArrayList<String>()
 
-        var whereAlreadyGenerated = false
-        var mode = DatabaseMode.NOT_SET
+    fun where(key: DatabaseColumn<*>, condition: String, value: Any): QueryBuilder {
+        conditionals.add(Conditional(ConditionalType.AND, InlinePredicate(key, value, condition)))
+        return this
+    }
 
-        for (token in tokens) {
-            when (token.sqlToken) {
-                SqlToken.SELECT -> {
-                    if (query.isNotEmpty()) {
-                        throw DatabaseTokenPositionMismatchException(token.sqlToken)
-                    }
-                    if (mode != DatabaseMode.NOT_SET) {
-                        throw IllegalDatabaseTokenUnderModeException(token.sqlToken, mode)
-                    }
+    fun where(embeddedQueryBuilder: EmbeddedQueryBuilder): QueryBuilder {
+        val queryBuilder = QueryBuilder(this.table)
+        embeddedQueryBuilder.invoke(queryBuilder)
+        conditionals.add(Conditional(ConditionalType.AND, ExternalPredicate(queryBuilder.conditionals)))
+        return this
+    }
 
-                    mode = DatabaseMode.SELECT
+    fun orWhere(key: DatabaseColumn<*>, value: Any): QueryBuilder {
+        conditionals.add(Conditional(ConditionalType.OR, InlinePredicate(key, value, "=")))
+        return this
+    }
 
-                    val selectAttributes = token.attributes.joinToString(", ")
-                    query += "SELECT $selectAttributes FROM `$tableName` "
-                }
-                SqlToken.INSERT -> {
-                    if (query.isNotEmpty()) {
-                        throw DatabaseTokenPositionMismatchException(token.sqlToken)
-                    }
-                    if (mode != DatabaseMode.NOT_SET) {
-                        throw IllegalDatabaseTokenUnderModeException(token.sqlToken, mode)
-                    }
+    fun orWhere(key: DatabaseColumn<*>, condition: String, value: Any): QueryBuilder {
+        conditionals.add(Conditional(ConditionalType.OR, InlinePredicate(key, value, condition)))
+        return this
+    }
 
-                    val data = token.attributes[0] as HashMap<String, String>
-                    val keys = data.keys
-                    val variables = ArrayList<String>()
+    fun orWhere(embeddedQueryBuilder: EmbeddedQueryBuilder): QueryBuilder {
+        val queryBuilder = QueryBuilder(this.table)
+        embeddedQueryBuilder.invoke(queryBuilder)
+        conditionals.add(Conditional(ConditionalType.OR, ExternalPredicate(queryBuilder.conditionals)))
+        return this
+    }
 
-                    mode = DatabaseMode.INSERT
+    fun insert(mysqlDataBuilder: SqlDataBuilder): QueryBuilder {
+        mode = DatabaseMode.INSERT
+        val mysqlDataMap = SqlDataBuilder.SqlDataMapBuilder()
+        mysqlDataBuilder.invoke(mysqlDataMap)
 
-                    for (value in data) {
-                        variables.add("?")
-                        attributes.add(value.value)
-                    }
-
-                    query += "INSERT INTO `$tableName` (${keys.joinToString(", ")}) VALUES (${variables.joinToString(", ")})"
-                }
-                SqlToken.UPDATE -> {
-                    if (query.isNotEmpty()) {
-                        throw DatabaseTokenPositionMismatchException(token.sqlToken)
-                    }
-                    if (mode != DatabaseMode.NOT_SET) {
-                        throw IllegalDatabaseTokenUnderModeException(token.sqlToken, mode)
-                    }
-
-                    val data = token.attributes[0] as HashMap<String, String>
-                    val values = ArrayList<String>()
-
-                    mode = DatabaseMode.UPDATE
-
-                    for (value in data) {
-                        values.add("`${value.key}`=?")
-                        attributes.add(value.value)
-                    }
-
-                    query += "UPDATE `$tableName` SET ${values.joinToString(", ")} "
-                }
-                SqlToken.WHERE -> {
-                    if (mode == DatabaseMode.NOT_SET) {
-                        // If the database mode isn't set we prepare the select all beforehand
-                        tokens.add(SqlTokenData(SqlToken.SELECT, arrayListOf("*")))
-                        mode = DatabaseMode.SELECT
-                    }
-                    if (mode == DatabaseMode.INSERT) {
-                        throw IllegalDatabaseTokenUnderModeException(token.sqlToken, mode)
-                    }
-
-                    query += if (whereAlreadyGenerated) {
-                        "AND ${token.attributes[0]} = ? "
-                    } else {
-                        whereAlreadyGenerated = true
-                        "WHERE ${token.attributes[0]} = ? "
-                    }
-                    attributes.add(token.attributes[1].toString())
-                }
-                SqlToken.WHERE_EXTENDED -> {
-                    if (mode == DatabaseMode.NOT_SET) {
-                        // If the database mode isn't set we prepare the select all beforehand
-                        tokens.add(SqlTokenData(SqlToken.SELECT, arrayListOf("*")))
-                        mode = DatabaseMode.SELECT
-                    }
-                    if (mode == DatabaseMode.INSERT) {
-                        throw IllegalDatabaseTokenUnderModeException(token.sqlToken, mode)
-                    }
-
-                    query += if (whereAlreadyGenerated) {
-                        "AND ${token.attributes[0]} ${token.attributes[1]} ? "
-                    } else {
-                        whereAlreadyGenerated = true
-                        "WHERE ${token.attributes[0]} ${token.attributes[1]} ? "
-                    }
-                    attributes.add(token.attributes[2].toString())
-                }
-                SqlToken.WHERE_NOT -> {
-                    if (mode == DatabaseMode.NOT_SET) {
-                        // If the database mode isn't set we prepare the select all beforehand
-                        tokens.add(SqlTokenData(SqlToken.SELECT, arrayListOf("*")))
-                        mode = DatabaseMode.SELECT
-                    }
-                    if (mode == DatabaseMode.INSERT) {
-                        throw IllegalDatabaseTokenUnderModeException(token.sqlToken, mode)
-                    }
-
-                    query += if (whereAlreadyGenerated) {
-                        "AND ${token.attributes[0]} NOT ? "
-                    } else {
-                        whereAlreadyGenerated = true
-                        "WHERE ${token.attributes[0]} NOT ? "
-                    }
-                    attributes.add(token.attributes[1].toString())
-                }
-                SqlToken.WHERE_NOT_EXTENDED -> {
-                    if (mode == DatabaseMode.NOT_SET) {
-                        // If the database mode isn't set we prepare the select all beforehand
-                        tokens.add(SqlTokenData(SqlToken.SELECT, arrayListOf("*")))
-                        mode = DatabaseMode.SELECT
-                    }
-                    if (mode == DatabaseMode.INSERT) {
-                        throw IllegalDatabaseTokenUnderModeException(token.sqlToken, mode)
-                    }
-
-                    query += if (whereAlreadyGenerated) {
-                        "AND ${token.attributes[0]} NOT ${token.attributes[1]} ? "
-                    } else {
-                        whereAlreadyGenerated = true
-                        "WHERE ${token.attributes[0]} NOT ${token.attributes[1]} ? "
-                    }
-                    attributes.add(token.attributes[2].toString())
-                }
-                SqlToken.OR_WHERE -> {
-                    if (!whereAlreadyGenerated) {
-                        throw DatabaseTokenPositionMismatchException(token.sqlToken)
-                    }
-                    if (mode == DatabaseMode.NOT_SET) {
-                        // If the database mode isn't set we prepare the select all beforehand
-                        tokens.add(SqlTokenData(SqlToken.SELECT, arrayListOf("*")))
-                        mode = DatabaseMode.SELECT
-                    }
-                    if (mode == DatabaseMode.INSERT) {
-                        throw IllegalDatabaseTokenUnderModeException(token.sqlToken, mode)
-                    }
-
-                    query += "OR ${token.attributes[0]} = ? "
-                    attributes.add(token.attributes[1].toString())
-                }
-                SqlToken.OR_WHERE_EXTENDED -> {
-                    if (!whereAlreadyGenerated) {
-                        throw DatabaseTokenPositionMismatchException(token.sqlToken)
-                    }
-                    if (mode == DatabaseMode.NOT_SET) {
-                        // If the database mode isn't set we prepare the select all beforehand
-                        tokens.add(SqlTokenData(SqlToken.SELECT, arrayListOf("*")))
-                        mode = DatabaseMode.SELECT
-                    }
-                    if (mode == DatabaseMode.INSERT) {
-                        throw IllegalDatabaseTokenUnderModeException(token.sqlToken, mode)
-                    }
-
-                    query += "OR ${token.attributes[0]} ${token.attributes[1]} ?"
-                    attributes.add(token.attributes[2].toString())
-                }
-                SqlToken.OR_WHERE_NOT -> {
-                    if (!whereAlreadyGenerated) {
-                        throw DatabaseTokenPositionMismatchException(token.sqlToken)
-                    }
-                    if (mode == DatabaseMode.NOT_SET) {
-                        // If the database mode isn't set we prepare the select all beforehand
-                        tokens.add(SqlTokenData(SqlToken.SELECT, arrayListOf("*")))
-                        mode = DatabaseMode.SELECT
-                    }
-                    if (mode == DatabaseMode.INSERT) {
-                        throw IllegalDatabaseTokenUnderModeException(token.sqlToken, mode)
-                    }
-
-                    query += "OR WHERE ${token.attributes[0]} NOT ? $query"
-                    attributes.add(token.attributes[1].toString())
-                }
-                SqlToken.OR_WHERE_NOT_EXTENDED -> {
-                    if (!whereAlreadyGenerated) {
-                        throw DatabaseTokenPositionMismatchException(token.sqlToken)
-                    }
-                    if (mode == DatabaseMode.NOT_SET) {
-                        // If the database mode isn't set we prepare the select all beforehand
-                        tokens.add(SqlTokenData(SqlToken.SELECT, arrayListOf("*")))
-                        mode = DatabaseMode.SELECT
-                    }
-                    if (mode == DatabaseMode.INSERT) {
-                        throw IllegalDatabaseTokenUnderModeException(token.sqlToken, mode)
-                    }
-
-                    query += "OR ${token.attributes[0]} NOT ${token.attributes[1]} ?"
-                    attributes.add(token.attributes[2].toString())
-                }
-                SqlToken.LIMIT -> {
-                    if (mode != DatabaseMode.SELECT) {
-                        throw IllegalDatabaseTokenUnderModeException(token.sqlToken, mode)
-                    }
-
-                    query += "LIMIT ${token.attributes[0]} "
-                }
-                SqlToken.OFFSET -> {
-                    if (mode != DatabaseMode.SELECT) {
-                        throw IllegalDatabaseTokenUnderModeException(token.sqlToken, mode)
-                    }
-
-                    query += "OFFSET ${token.attributes[0]} "
-                }
-                SqlToken.ORDER_BY -> {
-                    if (mode != DatabaseMode.SELECT) {
-                        throw IllegalDatabaseTokenUnderModeException(token.sqlToken, mode)
-                    }
-
-                    query += "ORDER BY ${token.attributes[0]} "
-                }
-                SqlToken.ORDER_BY_EXTENDED -> {
-                    if (mode != DatabaseMode.SELECT) {
-                        throw IllegalDatabaseTokenUnderModeException(token.sqlToken, mode)
-                    }
-
-                    query += "ORDER BY ${token.attributes[0]} ${token.attributes[1]} "
-                }
-
-                else -> throw UnprocessableDatabaseTokenException(token.sqlToken)
-            }
+        for (item in mysqlDataMap.dataMap) {
+            columnData[item.key] = item.value
         }
+        return this
+    }
 
-        return TokenisedDatabaseQuery("$query;", attributes)
+    fun update(mysqlDataBuilder: SqlDataBuilder): QueryBuilder {
+        mode = DatabaseMode.UPDATE
+        val mysqlDataMap = SqlDataBuilder.SqlDataMapBuilder()
+        mysqlDataBuilder.invoke(mysqlDataMap)
+
+        for (item in mysqlDataMap.dataMap) {
+            columnData[item.key] = item.value
+        }
+        return this
+    }
+
+    fun count(): Long {
+        mode = DatabaseMode.COUNT
+        return get().first()[".COUNT(*)"] as Long
     }
 
     fun get(): DatabaseResult {
-        val tokenisedQuery = tokenise()
-        return DatabaseResult(Vortex.database.runQueryStatement(tokenisedQuery), tableName)
+        return DatabaseResult(Vortex.database.executeQuery(this.toDatabaseQuery()), table)
     }
 
-    fun execute() {
-        val tokenisedQuery = tokenise()
-        Vortex.database.runInsertStatement(tokenisedQuery)
+    fun first(): DatabaseRow {
+        // Gets first result of query and set limit of 1
+        this.limit(1)
+        return get().first()
     }
 
     /**
-     * Returns the tokenised SQL string that doesn't contain any data attached
+     * Returns the SQL query string and the data passed to the prepared query
+     */
+    fun toDatabaseQuery(): DatabaseQuery {
+        var query = ""
+        val data = ArrayList<Any>()
+        when (mode) {
+            DatabaseMode.SELECT -> {
+                if (selectFields.isEmpty()) {
+                    buildSelectFields()
+                }
+                query = "SELECT ${selectFields.joinToString(", ")} FROM `${table.tableName}`" + buildWhereConditionals(data)
+                if (limit != null) {
+                    query += " LIMIT $limit"
+                }
+            }
+            DatabaseMode.UPDATE -> {
+                val encodedSchema = ArrayList<String>()
+
+                for (column in columnData) {
+                    encodedSchema.add("${column.key.columnName}=?")
+                    data.add(column.value)
+                }
+
+                query = "UPDATE `${table.tableName}` SET ${encodedSchema.joinToString(",")}" + buildWhereConditionals(data)
+            }
+            DatabaseMode.INSERT -> {
+                val columnNames = ArrayList<String>()
+
+                for (column in columnData) {
+                    columnNames.add(column.key.columnName)
+                    data.add(column.value)
+                }
+
+                query = "INSERT INTO `${table.tableName}` (${columnNames.joinToString(",")}) VALUES (${"?,".repeat(columnNames.size).removeSuffix(",")})"
+            }
+            DatabaseMode.COUNT -> {
+                query = "SELECT COUNT(*) FROM `${table.tableName}`" + buildWhereConditionals(data)
+            }
+        }
+
+        return DatabaseQuery(query, data)
+    }
+
+    fun limit(limit: Int): QueryBuilder {
+        this.limit = limit
+        return this
+    }
+
+    /**
+     * Returns the SQL string without any data attached
      *
      * @return SQL query
      */
     fun toSql(): String {
-        return tokenise().query
+        return toDatabaseQuery().query
     }
 
-    private fun setupSelect() {
-        tokens.add(SqlTokenData(SqlToken.SELECT, arrayListOf("*")))
+    private fun buildWhereConditionals(data: ArrayList<Any>,
+                                       includeWhere: Boolean = true,
+                                       conditionals: ArrayList<Conditional> = this.conditionals): String {
+        if (conditionals.isEmpty()) {
+            return ""
+        }
+        var where = ""
+
+        if (includeWhere) {
+            where += " WHERE "
+        }
+        for (conditional in conditionals.withIndex()) {
+            if (conditional.index > 0) {
+                // Only handle AND/OR after first index
+                where += when (conditional.value.conditionalType) {
+                    ConditionalType.AND -> " AND "
+                    ConditionalType.OR -> " OR "
+                }
+            }
+
+            if (conditional.value.predicate is InlinePredicate) {
+                val inlinePredicate = conditional.value.predicate as InlinePredicate
+                where += "${inlinePredicate.column} ${inlinePredicate.condition} ?"
+                data.add(inlinePredicate.value)
+            } else if (conditional.value.predicate is ExternalPredicate) {
+                val externalPredicate = conditional.value.predicate as ExternalPredicate
+                val whereConditions = buildWhereConditionals(data, false, externalPredicate.conditionals)
+
+                where += "($whereConditions)"
+            }
+        }
+
+        return where
     }
 
     enum class DatabaseMode {
         SELECT,
         UPDATE,
         INSERT,
-        NOT_SET
+        COUNT
+    }
+
+    fun interface SqlDataBuilder {
+        fun invoke(sqlDataMapBuilder: SqlDataMapBuilder)
+
+        class SqlDataMapBuilder {
+            val dataMap = HashMap<DatabaseColumn<*>, Any>()
+
+            operator fun set(key: DatabaseColumn<*>, value: Any) {
+                dataMap[key] = value
+            }
+        }
     }
 }

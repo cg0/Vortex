@@ -1,6 +1,6 @@
 plugins {
     java
-    kotlin("jvm") version "1.4.31"
+    kotlin("jvm") version "1.5.10"
     id("com.github.johnrengelman.shadow") version "7.0.0"
 }
 
@@ -13,7 +13,7 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib"))
-    testCompile("junit", "junit", "4.12")
+    testImplementation("junit", "junit", "4.12")
     implementation("mysql", "mysql-connector-java", "5.1.13")
     implementation("org.jetbrains.kotlinx", "kotlinx-html-jvm", "0.7.3")
     implementation("org.jetbrains.kotlin", "kotlin-reflect", "1.5.10")
