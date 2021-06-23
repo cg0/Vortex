@@ -27,6 +27,8 @@ class QueryBuildTest {
         val anotherColumn = varchar("another_column")
     }
 
+
+
     @Test
     fun `Can we query a database table without a conditional`() {
         val builder = QueryBuilder(TestTable)

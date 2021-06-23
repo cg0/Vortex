@@ -1,6 +1,7 @@
 package uk.cg0.vortex.database
 
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Test
 
 class MysqlTests {
@@ -34,6 +35,13 @@ class MysqlTests {
 
         val id = id()
         val name = varchar("name")
+    }
+
+    @Before
+    fun dropAllTable() {
+        MySqlTestTable.dropIfExists()
+        MysqlTestDefaultTable.dropIfExists()
+        OtherTable.dropIfExists()
     }
 
     @Test

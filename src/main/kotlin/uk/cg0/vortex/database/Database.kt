@@ -98,6 +98,10 @@ class Database(host: String?, database: String?, username: String?, password: St
         executeUpdate(DatabaseQuery("DROP TABLE `$tableName`", ArrayList()))
     }
 
+    fun dropTableIfExists(tableName: String) {
+        executeUpdate(DatabaseQuery("DROP TABLE IF EXISTS `$tableName`", ArrayList()))
+    }
+
     fun truncateTable(tableName: String) {
         executeUpdate(DatabaseQuery("TRUNCATE TABLE `$tableName`", ArrayList()))
     }

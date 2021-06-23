@@ -47,6 +47,10 @@ abstract class DatabaseTable {
         Vortex.database.dropTable(this.tableName)
     }
 
+    fun dropIfExists() {
+        Vortex.database.dropTableIfExists(this.tableName)
+    }
+
     fun truncate() {
         Vortex.database.truncateTable(this.tableName)
     }
