@@ -26,6 +26,16 @@ class MysqlTests {
         val age = integer("age").default(25)
     }
 
+    object OtherTable: DatabaseTable() {
+        override val tableName: String
+            get() = "others"
+        override val primaryKey: DatabaseColumn<*>
+            get() = this.id
+
+        val id = id()
+        val name = varchar("name")
+    }
+
     @Test
     fun `Can we create and drop a table`() {
         // There are no asserts but any errors would throw an exception and fail the test
@@ -79,5 +89,147 @@ class MysqlTests {
 
         assertEquals("Test", data[MysqlTestDefaultTable.name])
         assertEquals(25, data[MysqlTestDefaultTable.age])
+
+        MysqlTestDefaultTable.drop()
+    }
+
+    @Test
+    fun `Can we create two tables and join them together`() {
+        MySqlTestTable.create()
+        OtherTable.create()
+
+        MySqlTestTable.insert {
+            it[MySqlTestTable.name] = "Foo"
+            it[MySqlTestTable.age] = 20
+        }
+
+        MySqlTestTable.insert {
+            it[MySqlTestTable.name] = "Bar"
+            it[MySqlTestTable.age] = 21
+        }
+
+        MySqlTestTable.insert {
+            it[MySqlTestTable.name] = "Baz"
+            it[MySqlTestTable.age] = 22
+        }
+
+        OtherTable.insert {
+            it[OtherTable.name] = "Baz"
+        }
+
+        val response = OtherTable.where(OtherTable.id, 1).join(OtherTable.name, "=", MySqlTestTable.name).first()
+
+        assertEquals(1, response[OtherTable.id])
+        assertEquals("Baz", response[OtherTable.name])
+        assertEquals(3, response[MySqlTestTable.id])
+        assertEquals("Baz", response[MySqlTestTable.name])
+
+        MySqlTestTable.drop()
+        OtherTable.drop()
+    }
+
+    @Test
+    fun `Can we create two tables and left join them together`() {
+        MySqlTestTable.create()
+        OtherTable.create()
+
+        MySqlTestTable.insert {
+            it[MySqlTestTable.name] = "Foo"
+            it[MySqlTestTable.age] = 20
+        }
+
+        MySqlTestTable.insert {
+            it[MySqlTestTable.name] = "Bar"
+            it[MySqlTestTable.age] = 21
+        }
+
+        MySqlTestTable.insert {
+            it[MySqlTestTable.name] = "Baz"
+            it[MySqlTestTable.age] = 22
+        }
+
+        OtherTable.insert {
+            it[OtherTable.name] = "Baz"
+        }
+
+        val response = OtherTable.where(OtherTable.id, 1).leftJoin(OtherTable.name, "=", MySqlTestTable.name).first()
+
+        assertEquals(1, response[OtherTable.id])
+        assertEquals("Baz", response[OtherTable.name])
+        assertEquals(3, response[MySqlTestTable.id])
+        assertEquals("Baz", response[MySqlTestTable.name])
+
+        MySqlTestTable.drop()
+        OtherTable.drop()
+    }
+
+    @Test
+    fun `Can we create two tables and right join them together`() {
+        MySqlTestTable.create()
+        OtherTable.create()
+
+        MySqlTestTable.insert {
+            it[MySqlTestTable.name] = "Foo"
+            it[MySqlTestTable.age] = 20
+        }
+
+        MySqlTestTable.insert {
+            it[MySqlTestTable.name] = "Bar"
+            it[MySqlTestTable.age] = 21
+        }
+
+        MySqlTestTable.insert {
+            it[MySqlTestTable.name] = "Baz"
+            it[MySqlTestTable.age] = 22
+        }
+
+        OtherTable.insert {
+            it[OtherTable.name] = "Baz"
+        }
+
+        val response = OtherTable.where(OtherTable.id, 1).rightJoin(OtherTable.name, "=", MySqlTestTable.name).first()
+
+        assertEquals(1, response[OtherTable.id])
+        assertEquals("Baz", response[OtherTable.name])
+        assertEquals(3, response[MySqlTestTable.id])
+        assertEquals("Baz", response[MySqlTestTable.name])
+
+        MySqlTestTable.drop()
+        OtherTable.drop()
+    }
+
+    @Test
+    fun `Can we create two tables and cross join them together`() {
+        MySqlTestTable.create()
+        OtherTable.create()
+
+        MySqlTestTable.insert {
+            it[MySqlTestTable.name] = "Foo"
+            it[MySqlTestTable.age] = 20
+        }
+
+        MySqlTestTable.insert {
+            it[MySqlTestTable.name] = "Bar"
+            it[MySqlTestTable.age] = 21
+        }
+
+        MySqlTestTable.insert {
+            it[MySqlTestTable.name] = "Baz"
+            it[MySqlTestTable.age] = 22
+        }
+
+        OtherTable.insert {
+            it[OtherTable.name] = "Baz"
+        }
+
+        val response = OtherTable.where(OtherTable.id, 1).where(MySqlTestTable.id, 1).crossJoin(MySqlTestTable).first()
+
+        assertEquals(1, response[OtherTable.id])
+        assertEquals("Baz", response[OtherTable.name])
+        assertEquals(1, response[MySqlTestTable.id])
+        assertEquals("Foo", response[MySqlTestTable.name])
+
+        MySqlTestTable.drop()
+        OtherTable.drop()
     }
 }

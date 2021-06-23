@@ -1,10 +1,8 @@
 package uk.cg0.vortex.database
 
 import uk.cg0.vortex.Vortex
-import uk.cg0.vortex.database.conditionals.Conditional
-import uk.cg0.vortex.database.conditionals.ConditionalType
-import uk.cg0.vortex.database.conditionals.ExternalPredicate
-import uk.cg0.vortex.database.conditionals.InlinePredicate
+import uk.cg0.vortex.database.conditionals.*
+import uk.cg0.vortex.database.join.DatabaseJoin
 import kotlin.collections.ArrayList
 
 class QueryBuilder(private val table: DatabaseTable) {
@@ -13,9 +11,19 @@ class QueryBuilder(private val table: DatabaseTable) {
     private val conditionals = ArrayList<Conditional>()
     private var limit: Int? = null
     private val columnData = HashMap<DatabaseColumn<*>, Any>()
+    private val joins = ArrayList<DatabaseJoin>()
 
     private fun buildSelectFields(): ArrayList<DatabaseColumn<*>> {
         selectFields = Vortex.database.getFieldsFromTableModel(table, Database.DatabaseFieldFilter.DIRECT_FIELDS)
+        for (join in joins) {
+            if (join.predicate is ColumnLinkingPredicate) {
+                selectFields += Vortex.database.getFieldsFromTableModel(
+                    join.predicate.table, Database.DatabaseFieldFilter.DIRECT_FIELDS)
+            } else if (join.predicate is ColumnInlinePredicate) {
+                selectFields += Vortex.database.getFieldsFromTableModel(
+                    join.predicate.value.table, Database.DatabaseFieldFilter.DIRECT_FIELDS)
+            }
+        }
         return selectFields
     }
 
@@ -87,6 +95,26 @@ class QueryBuilder(private val table: DatabaseTable) {
         return this
     }
 
+    fun join(localKey: DatabaseColumn<*>, condition: String, foreignKey: DatabaseColumn<*>): QueryBuilder {
+        joins.add(DatabaseJoin(DatabaseJoin.JoinType.INNER_JOIN, ColumnInlinePredicate(localKey, foreignKey, condition)))
+        return this
+    }
+
+    fun leftJoin(localKey: DatabaseColumn<*>, condition: String, foreignKey: DatabaseColumn<*>): QueryBuilder {
+        joins.add(DatabaseJoin(DatabaseJoin.JoinType.LEFT_JOIN, ColumnInlinePredicate(localKey, foreignKey, condition)))
+        return this
+    }
+
+    fun rightJoin(localKey: DatabaseColumn<*>, condition: String, foreignKey: DatabaseColumn<*>): QueryBuilder {
+        joins.add(DatabaseJoin(DatabaseJoin.JoinType.RIGHT_JOIN, ColumnInlinePredicate(localKey, foreignKey, condition)))
+        return this
+    }
+
+    fun crossJoin(foreignDatabase: DatabaseTable): QueryBuilder {
+        joins.add(DatabaseJoin(DatabaseJoin.JoinType.CROSS_JOIN, ColumnLinkingPredicate(foreignDatabase)))
+        return this
+    }
+
     fun count(): Long {
         mode = DatabaseMode.COUNT
         return get().first()[".COUNT(*)"] as Long
@@ -113,7 +141,7 @@ class QueryBuilder(private val table: DatabaseTable) {
                 if (selectFields.isEmpty()) {
                     buildSelectFields()
                 }
-                query = "SELECT ${selectFields.joinToString(", ")} FROM `${table.tableName}`" + buildWhereConditionals(data)
+                query = "SELECT ${selectFields.joinToString(", ")} FROM `${table.tableName}`" + buildJoinConditionals() + buildWhereConditionals(data)
                 if (limit != null) {
                     query += " LIMIT $limit"
                 }
@@ -193,6 +221,30 @@ class QueryBuilder(private val table: DatabaseTable) {
         }
 
         return where
+    }
+
+    private fun buildJoinConditionals(): String {
+        if (joins.isEmpty()) {
+            return ""
+        }
+
+        var joinText = ArrayList<String>()
+
+        for (join in joins) {
+            if (join.joinType == DatabaseJoin.JoinType.CROSS_JOIN) {
+                if (join.predicate is ColumnLinkingPredicate) {
+                    joinText.add("${join.joinType} ${join.predicate.table.tableName}")
+                }
+            } else {
+                if (join.predicate is ColumnInlinePredicate) {
+                    joinText.add( "${join.joinType} ${join.predicate.value.table.tableName} ON " +
+                            "${join.predicate.column} ${join.predicate.condition} " +
+                            "${join.predicate.value}")
+                }
+            }
+        }
+
+        return " " + joinText.joinToString(" ")
     }
 
     enum class DatabaseMode {

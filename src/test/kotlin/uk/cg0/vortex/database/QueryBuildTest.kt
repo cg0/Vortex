@@ -2,6 +2,7 @@ package uk.cg0.vortex.database
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import javax.management.Query
 
 class QueryBuildTest {
     object TestTable: DatabaseTable() {
@@ -13,7 +14,17 @@ class QueryBuildTest {
         val id = id()
         val name = varchar("name")
         val age = integer("age")
+    }
 
+    object OtherTable: DatabaseTable() {
+        override val tableName: String
+            get() = "others"
+        override val primaryKey: DatabaseColumn<*>
+            get() = id
+
+        val id = id()
+        val name = varchar("name")
+        val anotherColumn = varchar("another_column")
     }
 
     @Test
@@ -128,7 +139,7 @@ class QueryBuildTest {
             it[TestTable.age] = 23
         }.toDatabaseQuery()
 
-        assertEquals("INSERT INTO `tests` (name,age) VALUES ?,?", query.query)
+        assertEquals("INSERT INTO `tests` (name,age) VALUES (?,?)", query.query)
         assertEquals("Connor", query.data[0])
         assertEquals(23, query.data[1])
     }
@@ -143,5 +154,41 @@ class QueryBuildTest {
         assertEquals("UPDATE `tests` SET name=? WHERE tests.name = ?", query.query)
         assertEquals("bar", query.data[0])
         assertEquals("foo", query.data[1])
+    }
+
+    @Test
+    fun `Can we run a join on two tables`() {
+        val builder = QueryBuilder(TestTable)
+        val query = builder.join(TestTable.name, "=", OtherTable.name).toDatabaseQuery()
+
+        assertEquals("SELECT tests.age, tests.id, tests.name, others.another_column, others.id, others.name " +
+                "FROM `tests` INNER JOIN others ON tests.name = others.name", query.query)
+    }
+
+    @Test
+    fun `Can we run a left join on two tables`() {
+        val builder = QueryBuilder(TestTable)
+        val query = builder.leftJoin(TestTable.name, "=", OtherTable.name).toDatabaseQuery()
+
+        assertEquals("SELECT tests.age, tests.id, tests.name, others.another_column, others.id, others.name " +
+                "FROM `tests` LEFT JOIN others ON tests.name = others.name", query.query)
+    }
+
+    @Test
+    fun `Can we run a right join on two tables`() {
+        val builder = QueryBuilder(TestTable)
+        val query = builder.rightJoin(TestTable.name, "=", OtherTable.name).toDatabaseQuery()
+
+        assertEquals("SELECT tests.age, tests.id, tests.name, others.another_column, others.id, others.name " +
+                "FROM `tests` RIGHT JOIN others ON tests.name = others.name", query.query)
+    }
+
+    @Test
+    fun `Can we run a cross join on two tables`() {
+        val builder = QueryBuilder(TestTable)
+        val query = builder.crossJoin(OtherTable).toDatabaseQuery()
+
+        assertEquals("SELECT tests.age, tests.id, tests.name, others.another_column, others.id, others.name " +
+                "FROM `tests` CROSS JOIN others", query.query)
     }
 }
