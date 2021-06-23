@@ -38,7 +38,9 @@ abstract class DatabaseTable {
     }
 
     fun create() {
-        Vortex.database.createTable(*Vortex.database.getFieldsFromTableModel(this).toTypedArray())
+        Vortex.database.createTable(
+            *Vortex.database.getFieldsFromTableModel(
+                this, Database.DatabaseFieldFilter.DIRECT_FIELDS).toTypedArray())
     }
 
     fun drop() {
@@ -88,11 +90,11 @@ abstract class DatabaseTable {
     }
 
     // Magic
-    fun hasMany(localKey: DatabaseColumn<Int>, foreignKey: DatabaseColumn<Int>): DatabaseRelation {
+    fun hasMany(localKey: DatabaseColumn<Int>, foreignKey: DatabaseColumn<Int>): DatabaseRelation<DatabaseResult> {
         return DatabaseRelation(localKey, foreignKey, DatabaseRelation.RelationType.ONE_TO_MANY)
     }
 
-    fun hasOne(localKey: DatabaseColumn<Int>, foreignKey: DatabaseColumn<Int>): DatabaseRelation {
+    fun hasOne(localKey: DatabaseColumn<Int>, foreignKey: DatabaseColumn<Int>): DatabaseRelation<DatabaseRow> {
         return DatabaseRelation(localKey, foreignKey, DatabaseRelation.RelationType.ONE_TO_ONE)
     }
 }

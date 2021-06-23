@@ -50,8 +50,6 @@ class Database(host: String?, database: String?, username: String?, password: St
 
     fun getFieldsFromTableModel(databaseTable: DatabaseTable, filter: DatabaseFieldFilter = DatabaseFieldFilter.ALL): ArrayList<DatabaseColumn<*>> {
         val fields = ArrayList<DatabaseColumn<*>>()
-        val databaseRelation = DatabaseRelation::class.createType()
-
         val kClass = databaseTable::class
 
         for (property in kClass.memberProperties) {
@@ -61,13 +59,17 @@ class Database(host: String?, database: String?, username: String?, password: St
             if (property.returnType.arguments.isNotEmpty()
                 && property.returnType == DatabaseColumn::class.createType(listOf(property.returnType.arguments.first()))
                 && filter.has(DatabaseFieldFilter.DIRECT_FIELDS)) {
-                fields.add(property.call(databaseTable) as DatabaseColumn<*>)
-            } else if (property.returnType == databaseRelation && filter.has(DatabaseFieldFilter.RELATIONAL_FIELDS)) {
-                val relationReference = property.call(databaseTable) as DatabaseRelation
 
-                for (relationField in getFieldsFromTableModel(relationReference.foreignKey.table)) {
-                    fields.add(relationField)
-                }
+                    fields.add(property.call(databaseTable) as DatabaseColumn<*>)
+            } else if (property.returnType.arguments.isNotEmpty()
+                && property.returnType == DatabaseRelation::class.createType(listOf(property.returnType.arguments.first()))
+                && filter.has(DatabaseFieldFilter.RELATIONAL_FIELDS)) {
+
+                    val relationReference = property.call(databaseTable) as DatabaseRelation<*>
+
+                    for (relationField in getFieldsFromTableModel(relationReference.foreignKey.table)) {
+                        fields.add(relationField)
+                    }
             }
         }
 

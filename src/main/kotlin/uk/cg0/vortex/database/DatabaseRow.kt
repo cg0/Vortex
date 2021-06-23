@@ -3,9 +3,11 @@ package uk.cg0.vortex.database
 import java.lang.Exception
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 class DatabaseRow(private val rowData: HashMap<String, Any>, private val table: DatabaseTable) {
     private val changedFields = ArrayList<DatabaseColumn<*>>()
+    private val relational = HashMap<DatabaseRelation<*>, Any>()
 
     operator fun get(key: DatabaseColumn<String>): String? {
         return rowData[key.toString()] as String?
@@ -25,6 +27,26 @@ class DatabaseRow(private val rowData: HashMap<String, Any>, private val table: 
 
     operator fun get(key: String): Any? {
         return rowData[key]
+    }
+
+    operator fun get(key: DatabaseRelation<DatabaseRow>): DatabaseRow {
+        if (key !in relational.keys) {
+            handleRelationship(key)
+        }
+
+        return relational[key] as DatabaseRow
+    }
+
+    operator fun get(key: DatabaseRelation<DatabaseResult>): DatabaseResult {
+        if (key !in relational.keys) {
+            handleRelationship(key)
+        }
+
+        return relational[key] as DatabaseResult
+    }
+
+    private fun handleRelationship(key: DatabaseRelation<*>) {
+        relational[key] = key.get(this[key.localKey] ?: return)
     }
 
     operator fun set(key: DatabaseColumn<Any>, value: Any) {

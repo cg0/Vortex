@@ -15,7 +15,7 @@ class QueryBuilder(private val table: DatabaseTable) {
     private val columnData = HashMap<DatabaseColumn<*>, Any>()
 
     private fun buildSelectFields(): ArrayList<DatabaseColumn<*>> {
-        selectFields = Vortex.database.getFieldsFromTableModel(table)
+        selectFields = Vortex.database.getFieldsFromTableModel(table, Database.DatabaseFieldFilter.DIRECT_FIELDS)
         return selectFields
     }
 
