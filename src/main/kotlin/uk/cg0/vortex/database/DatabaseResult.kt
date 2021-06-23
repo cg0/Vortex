@@ -6,16 +6,16 @@ import java.util.*
 class DatabaseResult(resultSet: ResultSet, table: DatabaseTable) {
     private val rows = ArrayList<DatabaseRow>();
     init {
-        val metadata = resultSet.metaData
-        val rowData = HashMap<String, Any>()
-
         while(resultSet.next()) {
+            val metadata = resultSet.metaData
+            val rowData = HashMap<String, Any>()
+
             for (i in 1 .. metadata.columnCount) {
                 rowData["${metadata.getTableName(i)}.${metadata.getColumnName(i)}"] = resultSet.getObject(i)
             }
-        }
 
-        rows.add(DatabaseRow(rowData, table))
+            rows.add(DatabaseRow(rowData, table))
+        }
     }
 
     operator fun iterator(): MutableIterator<DatabaseRow> {
