@@ -38,11 +38,91 @@ class MysqlTests {
         val name = varchar("name")
     }
 
+    object CityTable: DatabaseTable() {
+        override val tableName: String
+            get() = "cities"
+        override val primaryKey: DatabaseColumn<*>
+            get() = this.id
+
+        val id = id()
+        val name = varchar("name")
+        val countryId = integer("country_id")
+        val country = hasOne(countryId, CountryTable.id)
+    }
+
+    object CountryTable: DatabaseTable() {
+        override val tableName: String
+            get() = "countries"
+        override val primaryKey: DatabaseColumn<*>
+            get() = id
+
+        val id = id()
+        val name = varchar("name")
+        val cities = hasMany(id, CityTable.countryId)
+    }
+
     @Before
     fun dropAllTable() {
         MySqlTestTable.dropIfExists()
         MysqlTestDefaultTable.dropIfExists()
         OtherTable.dropIfExists()
+        CityTable.dropIfExists()
+        CountryTable.dropIfExists()
+    }
+
+    private fun setupCitiesAndCountries() {
+        CityTable.create()
+        CountryTable.create()
+
+        CountryTable.insert {
+            it[CountryTable.name] = "England"
+        }
+        CountryTable.insert {
+            it[CountryTable.name] = "Wales"
+        }
+        CountryTable.insert {
+            it[CountryTable.name] = "Scotland"
+        }
+        CountryTable.insert {
+            it[CountryTable.name] = "The Netherlands"
+        }
+
+        CityTable.insert {
+            it[CityTable.name] = "London"
+            it[CityTable.countryId] = 1
+        }
+        CityTable.insert {
+            it[CityTable.name] = "Manchester"
+            it[CityTable.countryId] = 1
+        }
+        CityTable.insert {
+            it[CityTable.name] = "Birmingham"
+            it[CityTable.countryId] = 1
+        }
+        CityTable.insert {
+            it[CityTable.name] = "Cardiff"
+            it[CityTable.countryId] = 2
+        }
+        CityTable.insert {
+            it[CityTable.name] = "Swansea"
+            it[CityTable.countryId] = 2
+        }
+        CityTable.insert {
+            it[CityTable.name] = "Edinburgh"
+            it[CityTable.countryId] = 3
+        }
+        CityTable.insert {
+            it[CityTable.name] = "Glasgow"
+            it[CityTable.countryId] = 3
+        }
+        CityTable.insert {
+            it[CityTable.name] = "Amsterdam"
+            it[CityTable.countryId] = 4
+        }
+        CityTable.insert {
+            it[CityTable.name] = "Eindhoven"
+            it[CityTable.countryId] = 4
+        }
     }
 
     @Test
@@ -287,5 +367,89 @@ class MysqlTests {
         assertEquals("baz", MySqlTestTable.find(3)[MySqlTestTable.name])
 
         MySqlTestTable.drop()
+    }
+
+    @Test
+    fun `Can we access country information through single a single city`() {
+        setupCitiesAndCountries()
+
+        assertEquals("England", CityTable.first()[CityTable.country][CountryTable.name])
+        assertEquals("Wales", CityTable.find(4)[CityTable.country][CountryTable.name])
+
+        CityTable.drop()
+        CountryTable.drop()
+    }
+
+    @Test
+    fun `Can we access country information for all cities`() {
+        setupCitiesAndCountries()
+        val cities = CityTable.get()
+
+        for (city in cities) {
+            assertEquals(when (city[CityTable.countryId]) {
+                1 -> "England"
+                2 -> "Wales"
+                3 -> "Scotland"
+                4 -> "The Netherlands"
+                else -> "FAIL"
+            }, city[CityTable.country][CountryTable.name])
+        }
+
+        CityTable.drop()
+        CountryTable.drop()
+    }
+
+    @Test
+    fun `Can we access all cities belonging to a country`() {
+        setupCitiesAndCountries()
+
+        val england = CountryTable.find(1)
+        val netherlands = CountryTable.find(4)
+
+        for (city in england[CountryTable.cities]) {
+            assertEquals(when (city[CityTable.id]) {
+                1 -> "London"
+                2 -> "Manchester"
+                3 -> "Birmingham"
+                else -> "FAIL"
+            }, city[CityTable.name])
+        }
+
+        for (city in netherlands[CountryTable.cities]) {
+            assertEquals(when (city[CityTable.id]) {
+                8 -> "Amsterdam"
+                9 -> "Eindhoven"
+                else -> "FAIL"
+            }, city[CityTable.name])
+        }
+
+        CityTable.drop()
+        CountryTable.drop()
+    }
+
+    @Test
+    fun `Can we list all cities belonging to all countries`() {
+        setupCitiesAndCountries()
+        val countries = CountryTable.get()
+
+        for (country in countries) {
+            for (city in country[CountryTable.cities]) {
+                assertEquals(when (city[CityTable.id]) {
+                    1 -> "London"
+                    2 -> "Manchester"
+                    3 -> "Birmingham"
+                    4 -> "Cardiff"
+                    5 -> "Swansea"
+                    6 -> "Edinburgh"
+                    7 -> "Glasgow"
+                    8 -> "Amsterdam"
+                    9 -> "Eindhoven"
+                    else -> "FAIL"
+                }, city[CityTable.name])
+            }
+        }
+
+        CityTable.drop()
+        CountryTable.drop()
     }
 }
