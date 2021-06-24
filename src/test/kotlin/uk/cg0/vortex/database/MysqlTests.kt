@@ -263,4 +263,29 @@ class MysqlTests {
 
         MySqlTestTable.drop()
     }
+
+    @Test
+    fun `Can we insert data into a table and find by ID using the find shorthand`() {
+        MySqlTestTable.create()
+
+        MySqlTestTable.insert {
+            it[MySqlTestTable.name] = "foo"
+            it[MySqlTestTable.age] = 0
+        }
+
+        MySqlTestTable.insert {
+            it[MySqlTestTable.name] = "bar"
+            it[MySqlTestTable.age] = 0
+        }
+
+        MySqlTestTable.insert {
+            it[MySqlTestTable.name] = "baz"
+            it[MySqlTestTable.age] = 0
+        }
+
+        assertEquals("bar", MySqlTestTable.find(2)[MySqlTestTable.name])
+        assertEquals("baz", MySqlTestTable.find(3)[MySqlTestTable.name])
+
+        MySqlTestTable.drop()
+    }
 }

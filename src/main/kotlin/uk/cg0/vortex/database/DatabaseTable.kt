@@ -65,6 +65,10 @@ abstract class DatabaseTable {
         return QueryBuilder(this).first()
     }
 
+    fun find(key: Any): DatabaseRow {
+        return this.where(this.primaryKey, key).first()
+    }
+
     // SQL datatypes
 
     // Numerical
