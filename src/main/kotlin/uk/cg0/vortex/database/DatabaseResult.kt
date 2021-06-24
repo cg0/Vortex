@@ -42,6 +42,10 @@ class DatabaseResult(resultSet: ResultSet, table: DatabaseTable) {
         return rows.size
     }
 
+    operator fun get(key: Int): DatabaseRow {
+        return rows[key]
+    }
+
 //    fun contains(key: String, value: String): Boolean {
 //        for (row in rows) {
 //            if (row[key] == value) {
