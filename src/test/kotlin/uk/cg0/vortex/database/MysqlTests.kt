@@ -1,5 +1,6 @@
 package uk.cg0.vortex.database
 
+import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -239,5 +240,27 @@ class MysqlTests {
 
         MySqlTestTable.drop()
         OtherTable.drop()
+    }
+
+    @Test
+    fun `Can we insert into table and then check the row exists`() {
+        MySqlTestTable.create()
+        MySqlTestTable.insert {
+            it[MySqlTestTable.name] = "test"
+            it[MySqlTestTable.age] = 0
+        }
+
+        Assert.assertTrue(MySqlTestTable.where(MySqlTestTable.name, "test").exists())
+
+        MySqlTestTable.drop()
+    }
+
+    @Test
+    fun `Can we not insert into a table and check the row doesn't exist`() {
+        MySqlTestTable.create()
+
+        Assert.assertFalse(MySqlTestTable.where(MySqlTestTable.name, "test").exists())
+
+        MySqlTestTable.drop()
     }
 }

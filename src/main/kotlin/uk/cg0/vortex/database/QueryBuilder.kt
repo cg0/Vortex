@@ -179,6 +179,10 @@ class QueryBuilder(private val table: DatabaseTable) {
         return this
     }
 
+    fun exists(): Boolean {
+        return count() > 0
+    }
+
     /**
      * Returns the SQL string without any data attached
      *
