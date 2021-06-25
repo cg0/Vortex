@@ -151,7 +151,22 @@ class Database(host: String?, database: String?, username: String?, password: St
         return executeUpdate(DatabaseQuery("$query ${changes.joinToString(",")}", ArrayList())) > 0
     }
 
+    fun doesTableExist(tableName: String): Boolean {
+        val query = "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_NAME = ? \n" +
+                "AND TABLE_SCHEMA in (SELECT DATABASE());"
+
+        val results = executeQuery(DatabaseQuery(query, arrayListOf(tableName)))
+        if (results.next()) {
+            return results.getInt("COUNT(*)") == 1
+        }
+        return false
+    }
+
     fun handleMigration(table: DatabaseTable) {
+        if (!doesTableExist(table.tableName)) {
+            table.create()
+            return
+        }
         val response = executeQuery(DatabaseQuery("DESCRIBE `${table.tableName}`", ArrayList()))
 
         val columns = HashMap<String, DatabaseColumn<*>>()
