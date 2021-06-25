@@ -3,6 +3,7 @@ package uk.cg0.vortex
 import uk.cg0.vortex.config.Config
 import uk.cg0.vortex.controller.ControllerFunction
 import uk.cg0.vortex.database.Database
+import uk.cg0.vortex.database.DatabaseTable
 import uk.cg0.vortex.database.migration.MigrationHandler
 import uk.cg0.vortex.internal.InternalController
 import uk.cg0.vortex.migrations.CreateMigrationsTable
@@ -106,5 +107,16 @@ object Vortex {
      */
     fun delete(path: String, function: KFunction<Unit>) {
         routingEngine[HttpVerb.DELETE, path] = ControllerFunction(function)
+    }
+
+    /**
+     * Migrates a set of databases to new database schema if needed
+     *
+     * @param tables An list of database table objects
+     */
+    fun migrateTables(tables: ArrayList<DatabaseTable>) {
+        for (table in tables) {
+            database.handleMigration(table)
+        }
     }
 }
