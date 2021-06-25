@@ -1,9 +1,13 @@
 package uk.cg0.vortex.database
 
+import uk.cg0.vortex.database.attribute.DatabaseAttributeType
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.PreparedStatement
 import java.sql.ResultSet
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 import kotlin.experimental.and
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.memberProperties
@@ -84,9 +88,10 @@ class Database(host: String?, database: String?, username: String?, password: St
         for (field in fields) {
             var attributes = ""
             for (attribute in field.attributes) {
-                attributes += attribute.getAttribute()
+                attributes += attribute.value.getAttribute()
             }
-            encodedFields.add("${field.columnName} ${field.dataType} $attributes")
+            val nullable = if (field.nullable) "" else "NOT NULL"
+            encodedFields.add("${field.columnName} ${field.dataType} $attributes $nullable")
         }
 
         encodedFields.add("PRIMARY KEY (${table.primaryKey.columnName})")
@@ -115,13 +120,24 @@ class Database(host: String?, database: String?, username: String?, password: St
 
         for (field in modify) {
             if (field.key != field.value.columnName) {
-                changes.add("RENAME COLUMN `${field.key} TO `${field.value.columnName}`")
+                changes.add("RENAME COLUMN ${field.key} TO ${field.value.columnName}")
+            } else {
+                var attributes = ""
+                for (attribute in field.value.attributes) {
+                    attributes += attribute.value.getAttribute()
+                }
+                val nullable = if (field.value.nullable) "" else "NOT NULL"
+                changes.add("MODIFY COLUMN ${field.value.columnName} ${field.value.dataType} $attributes $nullable")
             }
-            changes.add("MODIFY COLUMN ${field.value.columnName} ${field.value.dataType}")
         }
 
         for (field in add) {
-            changes.add("ADD COLUMN ${field.columnName} ${field.dataType}")
+            var attributes = ""
+            for (attribute in field.attributes) {
+                attributes += attribute.value.getAttribute()
+            }
+            val nullable = if (field.nullable) "" else "NOT NULL"
+            changes.add("ADD COLUMN ${field.columnName} ${field.dataType} $attributes $nullable")
         }
 
         for (field in drop) {
@@ -129,10 +145,77 @@ class Database(host: String?, database: String?, username: String?, password: St
         }
 
         if (changes.isEmpty()) {
-            return false;
+            return false
         }
 
-        return executeUpdate(DatabaseQuery(query, ArrayList())) > 0
+        return executeUpdate(DatabaseQuery("$query ${changes.joinToString(",")}", ArrayList())) > 0
+    }
+
+    fun handleMigration(table: DatabaseTable) {
+        val response = executeQuery(DatabaseQuery("DESCRIBE `${table.tableName}`", ArrayList()))
+
+        val columns = HashMap<String, DatabaseColumn<*>>()
+        for (column in this.getFieldsFromTableModel(table)) {
+            columns[column.columnName] = column
+        }
+
+        val processedFields = ArrayList<String>()
+
+        // Fields to pass to alter
+        val modify = HashMap<String, DatabaseColumn<*>>()
+        val add = ArrayList<DatabaseColumn<*>>()
+        val drop = ArrayList<String>()
+
+        while (response.next()) {
+            val field = response.getString("Field")
+            val type = response.getString("Type")
+            val nullable = response.getString("Null").equals("YES")
+            val key = response.getString("Key")
+            val default = response.getString("Default")
+            val extra = response.getString("Extra")
+
+            if (field !in columns) {
+                val fieldWithoutLength = field.replace(Regex("\\([0-9]+\\)"), "")
+                if (fieldWithoutLength in table.columnRenames.keys) {
+                    val column = table.columnRenames[fieldWithoutLength]
+                    if (column != null) {
+                        modify[fieldWithoutLength] = column
+                        processedFields.add(column.columnName)
+                    }
+                } else {
+                    drop.add(field)
+                }
+            } else {
+                val column = columns[field]
+                if (column != null) {
+                    val dataTypeMatches = column.dataType == type
+                    val nullableMatches = column.nullable == nullable
+                    val primaryKeyMatches = if (key == "PRI") column.table.primaryKey == column else true
+                    val defaultMatches =  default == column.default
+                    var extraMatches = true
+
+                    for (attributes in column.attributes) {
+                        if (attributes.value.getAttribute().lowercase() !in extra) {
+                            extraMatches = false
+                        }
+                    }
+
+                    if (!(dataTypeMatches && nullableMatches && primaryKeyMatches && defaultMatches && extraMatches)) {
+                        modify[field] = column
+                    }
+                }
+            }
+
+            processedFields.add(field)
+        }
+
+        for (column in columns) {
+            if (column.key !in processedFields) {
+                add.add(column.value)
+            }
+        }
+
+        this.alterTable(table, modify, add, drop)
     }
 
     enum class DatabaseFieldFilter (val id: Byte) {

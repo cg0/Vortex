@@ -5,6 +5,7 @@ import uk.cg0.vortex.Vortex
 abstract class DatabaseTable {
     abstract val tableName: String
     abstract val primaryKey: DatabaseColumn<*>
+    open val columnRenames = HashMap<String, DatabaseColumn<*>>()
 
     // SQL queries
 
@@ -55,6 +56,11 @@ abstract class DatabaseTable {
         Vortex.database.truncateTable(this.tableName)
     }
 
+    // Create builder object
+    fun queryBuilder(): QueryBuilder {
+        return QueryBuilder(this)
+    }
+
     // Quick data access
 
     fun get(): DatabaseResult {
@@ -73,7 +79,7 @@ abstract class DatabaseTable {
 
     // Numerical
     fun integer(name: String): DatabaseColumn<Int> {
-        return DatabaseColumn(this, name, "integer")
+        return DatabaseColumn<Int>(this, name, "int").maxLength(11)
     }
 
     fun id(): DatabaseColumn<Int> {
