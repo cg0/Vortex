@@ -1,20 +1,21 @@
 package uk.cg0.vortex.database
 
 import java.sql.ResultSet
+import java.util.*
 
-class DatabaseResult(resultSet: ResultSet, tableName: String) {
+class DatabaseResult(resultSet: ResultSet, table: DatabaseTable) {
     private val rows = ArrayList<DatabaseRow>();
     init {
-        val metadata = resultSet.metaData
-        val rowData = HashMap<String, String>()
-
         while(resultSet.next()) {
-            for (i in 1 .. metadata.columnCount) {
-                rowData[metadata.getColumnName(i)] = resultSet.getString(i)
-            }
-        }
+            val metadata = resultSet.metaData
+            val rowData = HashMap<String, Any>()
 
-        rows.add(DatabaseRow(rowData, tableName))
+            for (i in 1 .. metadata.columnCount) {
+                rowData["${metadata.getTableName(i)}.${metadata.getColumnName(i)}"] = resultSet.getObject(i)
+            }
+
+            rows.add(DatabaseRow(rowData, table))
+        }
     }
 
     operator fun iterator(): MutableIterator<DatabaseRow> {
@@ -41,14 +42,18 @@ class DatabaseResult(resultSet: ResultSet, tableName: String) {
         return rows.size
     }
 
-    fun contains(key: String, value: String): Boolean {
-        for (row in rows) {
-            if (row[key] == value) {
-                return true
-            }
-        }
-        return false
+    operator fun get(key: Int): DatabaseRow {
+        return rows[key]
     }
+
+//    fun contains(key: String, value: String): Boolean {
+//        for (row in rows) {
+//            if (row[key] == value) {
+//                return true
+//            }
+//        }
+//        return false
+//    }
 
     fun toArrayList(): ArrayList<DatabaseRow> {
         return rows
