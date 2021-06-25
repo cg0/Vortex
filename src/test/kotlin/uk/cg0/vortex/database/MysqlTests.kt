@@ -1,9 +1,10 @@
 package uk.cg0.vortex.database
 
 import org.junit.Assert
-import org.junit.Assert.assertEquals
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import uk.cg0.vortex.Vortex
 
 class MysqlTests {
     object MySqlTestTable: DatabaseTable() {
@@ -15,6 +16,23 @@ class MysqlTests {
         val id = id()
         val name = varchar("name")
         val age = integer("age")
+    }
+
+    object ModifiedMysqlTestTable: DatabaseTable() {
+        override val tableName: String
+            get() = "mysql_tests"
+        override val primaryKey: DatabaseColumn<*>
+            get() = this.id
+
+        val id = id()
+        val name = varchar("name")
+        val ageChanged = integer("age_changed")
+        val new = integer("new")
+
+        override val columnRenames: HashMap<String, DatabaseColumn<*>>
+            get() = hashMapOf(
+                "age" to ageChanged
+            )
     }
 
     object MysqlTestDefaultTable: DatabaseTable() {
@@ -451,5 +469,32 @@ class MysqlTests {
 
         CityTable.drop()
         CountryTable.drop()
+    }
+
+    @Test
+    fun `Can we migrate a table to another schema`() {
+        MySqlTestTable.create()
+
+        val initialResponse = Vortex.database.executeQuery(DatabaseQuery("EXPLAIN ${MySqlTestTable.tableName}", ArrayList()))
+        val initialFields = ArrayList<String>()
+        while (initialResponse.next()) {
+            initialFields.add(initialResponse.getString("Field"))
+        }
+
+        Vortex.migrateTables(arrayListOf(
+            ModifiedMysqlTestTable
+        ))
+
+        val newResponse = Vortex.database.executeQuery(DatabaseQuery("EXPLAIN ${MySqlTestTable.tableName}", ArrayList()))
+        val newFields = ArrayList<String>()
+        while (newResponse.next()) {
+            newFields.add(newResponse.getString("Field"))
+        }
+
+        assertFalse(initialFields.contains("age_changed"))
+        assertTrue(initialFields.contains("age"))
+
+        assertTrue(newFields.contains("age_changed"))
+        assertFalse(newFields.contains("age"))
     }
 }

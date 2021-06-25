@@ -91,7 +91,12 @@ class Database(host: String?, database: String?, username: String?, password: St
                 attributes += attribute.value.getAttribute()
             }
             val nullable = if (field.nullable) "" else "NOT NULL"
-            encodedFields.add("${field.columnName} ${field.dataType} $attributes $nullable")
+            val default = if (field.default != null) {
+                "DEFAULT ${field.default}"
+            } else {
+                ""
+            }
+            encodedFields.add("${field.columnName} ${field.dataType} $attributes $nullable $default")
         }
 
         encodedFields.add("PRIMARY KEY (${table.primaryKey.columnName})")
@@ -127,7 +132,12 @@ class Database(host: String?, database: String?, username: String?, password: St
                     attributes += attribute.value.getAttribute()
                 }
                 val nullable = if (field.value.nullable) "" else "NOT NULL"
-                changes.add("MODIFY COLUMN ${field.value.columnName} ${field.value.dataType} $attributes $nullable")
+                val default = if (field.value.default != null) {
+                    "DEFAULT ${field.value.default}"
+                } else {
+                    ""
+                }
+                changes.add("MODIFY COLUMN ${field.value.columnName} ${field.value.dataType} $default $attributes $nullable")
             }
         }
 
