@@ -107,6 +107,9 @@ class HttpHandler() {
         for (header in response.headers.keys) {
             writer.write("$header: ${response.headers[header]}\r\n")
         }
+        for (cookie in response.cookies) {
+            writer.write("Set-Cookie: ${cookie.key}=${cookie.value}\r\n")
+        }
 
         writer.write("\r\n")
         writer.write(response.outputStream.toString())

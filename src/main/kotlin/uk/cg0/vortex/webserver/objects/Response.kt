@@ -10,8 +10,9 @@ import java.nio.file.Files
 
 data class Response(var statusCode: HttpStatus,
                     val headers: HashMap<String, String>,
-                    var contentType: HttpContentType) {
-    constructor(): this(HttpStatus.OK, HashMap(), HttpContentType.TEXT_PLAIN)
+                    var contentType: HttpContentType,
+                    var cookies: HashMap<String, String>) {
+    constructor(): this(HttpStatus.OK, HashMap(), HttpContentType.TEXT_PLAIN, HashMap())
 
     val outputStream = ByteArrayOutputStream()
 
