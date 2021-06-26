@@ -5,6 +5,7 @@ import uk.cg0.vortex.controller.ControllerFunction
 import uk.cg0.vortex.database.Database
 import uk.cg0.vortex.database.DatabaseTable
 import uk.cg0.vortex.internal.InternalController
+import uk.cg0.vortex.middleware.Middleware
 import uk.cg0.vortex.webserver.enum.HttpStatus
 import uk.cg0.vortex.webserver.enum.HttpVerb
 import uk.cg0.vortex.webserver.routing.RoutingEngine
@@ -60,9 +61,10 @@ object Vortex {
      *
      * @param path The full path to register, domains are optional
      * @param function A reference to the controller function
+     * @param middleware A list of middleware to run before the controller
      */
-    fun get(path: String, function: KFunction<Any>) {
-        routingEngine[HttpVerb.GET, path] = ControllerFunction(function)
+    fun get(path: String, function: KFunction<Any>, middleware: ArrayList<Middleware> = ArrayList()) {
+        routingEngine[HttpVerb.GET, path] = ControllerFunction(function, middleware)
     }
 
     /**
@@ -70,9 +72,10 @@ object Vortex {
      *
      * @param path The full path to register, domains are optional
      * @param function A reference to the controller function
+     * @param middleware A list of middleware to run before the controller
      */
-    fun post(path: String, function: KFunction<Unit>) {
-        routingEngine[HttpVerb.POST, path] = ControllerFunction(function)
+    fun post(path: String, function: KFunction<Unit>, middleware: ArrayList<Middleware> = ArrayList()) {
+        routingEngine[HttpVerb.POST, path] = ControllerFunction(function, middleware)
     }
 
     /**
@@ -80,9 +83,10 @@ object Vortex {
      *
      * @param path The full path to register, domains are optional
      * @param function A reference to the controller function
+     * @param middleware A list of middleware to run before the controller
      */
-    fun put(path: String, function: KFunction<Unit>) {
-        routingEngine[HttpVerb.PUT, path] = ControllerFunction(function)
+    fun put(path: String, function: KFunction<Unit>, middleware: ArrayList<Middleware> = ArrayList()) {
+        routingEngine[HttpVerb.PUT, path] = ControllerFunction(function, middleware)
     }
 
     /**
@@ -90,9 +94,10 @@ object Vortex {
      *
      * @param path The full path to register, domains are optional
      * @param function A reference to the controller function
+     * @param middleware A list of middleware to run before the controller
      */
-    fun patch(path: String, function: KFunction<Unit>) {
-        routingEngine[HttpVerb.PATCH, path] = ControllerFunction(function)
+    fun patch(path: String, function: KFunction<Unit>, middleware: ArrayList<Middleware> = ArrayList()) {
+        routingEngine[HttpVerb.PATCH, path] = ControllerFunction(function, middleware)
     }
 
     /**
@@ -100,9 +105,10 @@ object Vortex {
      *
      * @param path The full path to register, domains are optional
      * @param function A reference to the controller function
+     * @param middleware A list of middleware to run before the controller
      */
-    fun delete(path: String, function: KFunction<Unit>) {
-        routingEngine[HttpVerb.DELETE, path] = ControllerFunction(function)
+    fun delete(path: String, function: KFunction<Unit>, middleware: ArrayList<Middleware> = ArrayList()) {
+        routingEngine[HttpVerb.DELETE, path] = ControllerFunction(function, middleware)
     }
 
     /**
