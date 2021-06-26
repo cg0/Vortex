@@ -1,6 +1,7 @@
 package uk.cg0.vortex.webserver.routing
 
 import uk.cg0.vortex.controller.ControllerFunction
+import uk.cg0.vortex.middleware.Middleware
 import uk.cg0.vortex.webserver.enum.HttpStatus
 import uk.cg0.vortex.webserver.enum.HttpVerb
 import java.rmi.UnexpectedException
@@ -76,7 +77,7 @@ class RoutingEngine {
             errors[domain] = EnumMap(HttpStatus::class.java)
         }
 
-        errors[domain]?.set(httpStatus, ControllerFunction(kFunction))
+        errors[domain]?.set(httpStatus, ControllerFunction(kFunction, ArrayList()))
     }
 
     fun getError(httpStatus: HttpStatus): ControllerFunction? {
