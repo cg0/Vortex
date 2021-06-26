@@ -27,9 +27,9 @@ object Vortex {
             config["DB_USERNAME"],
             config["DB_PASSWORD"])
 
-        routingEngine.registerError(HttpStatus.NOT_FOUND, InternalController::class, InternalController::fileNotFound)
-        routingEngine.registerError(HttpStatus.INTERNAL_SERVER_ERROR, InternalController::class,
-            InternalController::internalServerError)
+        routingEngine.registerError(HttpStatus.NOT_FOUND, InternalController::fileNotFound)
+        routingEngine.registerError(HttpStatus.INTERNAL_SERVER_ERROR, InternalController::internalServerError)
+        routingEngine.registerGenericError(InternalController::genericError)
     }
 
     /**
