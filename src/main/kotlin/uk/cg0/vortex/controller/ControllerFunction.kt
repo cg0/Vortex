@@ -15,7 +15,10 @@ data class ControllerFunction(val function: KFunction<Any>,
 
     fun execute(request: Request, response: Response): Any {
         for (middlewareItem in middleware) {
-            middlewareItem.handleMiddleware(request, response, variables)
+            val respondable = middlewareItem.handleMiddleware(request, response, variables)
+            if (respondable != null) {
+                return respondable
+            }
         }
 
         variables["request"] = request
