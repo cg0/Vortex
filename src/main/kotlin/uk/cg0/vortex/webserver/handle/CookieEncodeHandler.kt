@@ -35,7 +35,9 @@ class CookieEncodeHandler {
             }
         }
 
-        post[key] = value
+        if (key.isNotEmpty()) {
+            post[key] = value
+        }
 
         return post
     }
