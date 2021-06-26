@@ -13,6 +13,9 @@ import uk.cg0.vortex.webserver.enum.HttpVerb
 import uk.cg0.vortex.webserver.routing.RoutingEngine
 import uk.cg0.vortex.webserver.thread.HttpServerThread
 import java.lang.Exception
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 import kotlin.reflect.KFunction
 
 object Vortex {
@@ -23,6 +26,7 @@ object Vortex {
         Vortex::class.java.`package`.implementationVersion ?: "UNKNOWN"
     }
     var authentication: AuthenticationSystem? = null
+    val sessions = HashMap<String, HashMap<String, Any>>()
 
     init {
         config.load(".env")
@@ -139,5 +143,11 @@ object Vortex {
         }
         this.authentication =
             AuthenticationSystem(userKeyField, passwordField, passwordHashField, preferredPasswordHash)
+    }
+
+    fun createSession(): String {
+        val key = UUID.randomUUID().toString()
+        sessions[key] = HashMap()
+        return key
     }
 }
