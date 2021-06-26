@@ -4,9 +4,7 @@ import uk.cg0.vortex.config.Config
 import uk.cg0.vortex.controller.ControllerFunction
 import uk.cg0.vortex.database.Database
 import uk.cg0.vortex.database.DatabaseTable
-import uk.cg0.vortex.database.migration.MigrationHandler
 import uk.cg0.vortex.internal.InternalController
-import uk.cg0.vortex.migrations.CreateMigrationsTable
 import uk.cg0.vortex.webserver.enum.HttpStatus
 import uk.cg0.vortex.webserver.enum.HttpVerb
 import uk.cg0.vortex.webserver.routing.RoutingEngine
@@ -17,7 +15,6 @@ object Vortex {
     val routingEngine = RoutingEngine()
     val config = Config()
     val database: Database
-    val migrationHandler = MigrationHandler()
     val version: String by lazy {
         Vortex::class.java.`package`.implementationVersion ?: "UNKNOWN"
     }
@@ -55,7 +52,6 @@ object Vortex {
             println(line)
         }
 
-        migrationHandler.migrate(arrayListOf(CreateMigrationsTable()))
         HttpServerThread().run()
     }
 
