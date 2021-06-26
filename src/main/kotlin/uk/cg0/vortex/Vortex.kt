@@ -1,8 +1,10 @@
 package uk.cg0.vortex
 
+import uk.cg0.vortex.auth.AuthenticationSystem
 import uk.cg0.vortex.config.Config
 import uk.cg0.vortex.controller.ControllerFunction
 import uk.cg0.vortex.database.Database
+import uk.cg0.vortex.database.DatabaseColumn
 import uk.cg0.vortex.database.DatabaseTable
 import uk.cg0.vortex.internal.InternalController
 import uk.cg0.vortex.middleware.Middleware
@@ -10,6 +12,7 @@ import uk.cg0.vortex.webserver.enum.HttpStatus
 import uk.cg0.vortex.webserver.enum.HttpVerb
 import uk.cg0.vortex.webserver.routing.RoutingEngine
 import uk.cg0.vortex.webserver.thread.HttpServerThread
+import java.lang.Exception
 import kotlin.reflect.KFunction
 
 object Vortex {
@@ -19,6 +22,7 @@ object Vortex {
     val version: String by lazy {
         Vortex::class.java.`package`.implementationVersion ?: "UNKNOWN"
     }
+    var authentication: AuthenticationSystem? = null
 
     init {
         config.load(".env")
@@ -120,5 +124,20 @@ object Vortex {
         for (table in tables) {
             database.handleMigration(table)
         }
+    }
+
+    /**
+     * Sets up the authentication system within Vortex
+     */
+    fun setupAuth(userKeyField: DatabaseColumn<*>,
+                  passwordField: DatabaseColumn<String>,
+                  passwordHashField: DatabaseColumn<String>,
+                  preferredPasswordHash: AuthenticationSystem.PasswordHashType
+    ) {
+        if (preferredPasswordHash == AuthenticationSystem.PasswordHashType.CLEARTEXT) {
+            throw Exception("No, we're not doing that here")
+        }
+        this.authentication =
+            AuthenticationSystem(userKeyField, passwordField, passwordHashField, preferredPasswordHash)
     }
 }
