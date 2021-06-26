@@ -26,9 +26,9 @@ object Vortex {
     val version: String by lazy {
         Vortex::class.java.`package`.implementationVersion ?: "UNKNOWN"
     }
-    var authentication: AuthenticationSystem? = null
+    lateinit var authentication: AuthenticationSystem
     val sessions = HashMap<String, HashMap<String, Any>>()
-    val defaultMiddleware = arrayListOf(
+    val defaultMiddleware: ArrayList<Middleware> = arrayListOf(
         SessionMiddleware()
     )
 
