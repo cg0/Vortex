@@ -8,6 +8,7 @@ import uk.cg0.vortex.database.DatabaseColumn
 import uk.cg0.vortex.database.DatabaseTable
 import uk.cg0.vortex.internal.InternalController
 import uk.cg0.vortex.middleware.Middleware
+import uk.cg0.vortex.middleware.SessionMiddleware
 import uk.cg0.vortex.webserver.enum.HttpStatus
 import uk.cg0.vortex.webserver.enum.HttpVerb
 import uk.cg0.vortex.webserver.routing.RoutingEngine
@@ -27,6 +28,9 @@ object Vortex {
     }
     var authentication: AuthenticationSystem? = null
     val sessions = HashMap<String, HashMap<String, Any>>()
+    val defaultMiddleware = arrayListOf(
+        SessionMiddleware()
+    )
 
     init {
         config.load(".env")

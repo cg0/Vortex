@@ -1,5 +1,6 @@
 package uk.cg0.vortex.controller
 
+import uk.cg0.vortex.Vortex
 import uk.cg0.vortex.helper.injectFunction
 import uk.cg0.vortex.middleware.Middleware
 import uk.cg0.vortex.webserver.objects.Request
@@ -14,7 +15,8 @@ data class ControllerFunction(val function: KFunction<Any>,
     constructor(function: KFunction<Any>, middleware: ArrayList<Middleware>): this(function, HashMap(), middleware)
 
     fun execute(request: Request, response: Response): Any {
-        for (middlewareItem in middleware) {
+        val allMiddleware = Vortex.defaultMiddleware + middleware
+        for (middlewareItem in allMiddleware) {
             val respondable = middlewareItem.handleMiddleware(request, response, variables)
             if (respondable != null) {
                 return respondable
