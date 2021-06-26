@@ -17,6 +17,7 @@ import kotlin.reflect.KFunction
 class RoutingEngine {
     private val routes = HashMap<String, DomainContainerNode>()
     private val errors = HashMap<String, EnumMap<HttpStatus, ControllerFunction>>()
+    private val genericErrors = HashMap<String, ControllerFunction>()
 
     operator fun set(httpVerb: HttpVerb, path: String, controllerFunction: ControllerFunction) {
         val splitPath = path.split("/")
@@ -68,7 +69,7 @@ class RoutingEngine {
         return routes[domain]?.get(httpVerb, splitPath)
     }
 
-    fun registerError(httpStatus: HttpStatus, kClass: KClass<*>, kFunction: KFunction<Unit>) {
+    fun registerError(httpStatus: HttpStatus, kFunction: KFunction<Unit>) {
         registerError("*", httpStatus, kFunction)
     }
 
@@ -80,6 +81,14 @@ class RoutingEngine {
         errors[domain]?.set(httpStatus, ControllerFunction(kFunction, ArrayList()))
     }
 
+    fun registerGenericError(kFunction: KFunction<Unit>) {
+        registerGenericError("*", kFunction)
+    }
+
+    fun registerGenericError(domain: String, kFunction: KFunction<Unit>) {
+        genericErrors[domain] = ControllerFunction(kFunction, ArrayList())
+    }
+
     fun getError(httpStatus: HttpStatus): ControllerFunction? {
         return getError("*", httpStatus)
     }
@@ -88,7 +97,14 @@ class RoutingEngine {
         if (domain !in errors.keys) {
             return getError("*", httpStatus)
         }
-        return errors[domain]?.get(httpStatus)
+        val error = errors[domain]?.get(httpStatus)
+        return if (error == null) {
+            val genericError = genericErrors[domain]
+            genericError?.variables?.set("httpStatus", httpStatus)
+            genericError
+        } else {
+            error
+        }
     }
 
     override fun toString(): String {
