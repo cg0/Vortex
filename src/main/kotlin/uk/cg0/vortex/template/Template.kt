@@ -1,6 +1,6 @@
 package uk.cg0.vortex.template
 
-import uk.cg0.vortex.controller.Respondable
+import uk.cg0.vortex.controller.respondable.Respondable
 import uk.cg0.vortex.webserver.enum.HttpContentType
 import uk.cg0.vortex.webserver.enum.HttpStatus
 import uk.cg0.vortex.webserver.objects.Request
