@@ -84,7 +84,7 @@ class QueryBuilder(private val table: DatabaseTable) {
         return this
     }
 
-    fun update(mysqlDataBuilder: SqlDataBuilder): QueryBuilder {
+    fun update(mysqlDataBuilder: SqlDataBuilder) {
         mode = DatabaseMode.UPDATE
         val mysqlDataMap = SqlDataBuilder.SqlDataMapBuilder()
         mysqlDataBuilder.invoke(mysqlDataMap)
@@ -92,7 +92,8 @@ class QueryBuilder(private val table: DatabaseTable) {
         for (item in mysqlDataMap.dataMap) {
             columnData[item.key] = item.value
         }
-        return this
+
+        Vortex.database.executeUpdate(this.toDatabaseQuery())
     }
 
     fun join(localKey: DatabaseColumn<*>, condition: String, foreignKey: DatabaseColumn<*>): QueryBuilder {
