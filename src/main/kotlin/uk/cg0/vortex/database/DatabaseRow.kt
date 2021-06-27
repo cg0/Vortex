@@ -1,5 +1,6 @@
 package uk.cg0.vortex.database
 
+import uk.cg0.vortex.Vortex
 import java.lang.Exception
 import java.util.*
 import kotlin.collections.ArrayList
@@ -49,15 +50,16 @@ class DatabaseRow(private val rowData: HashMap<String, Any>, private val table: 
         relational[key] = key.get(this[key.localKey] ?: return)
     }
 
-    operator fun set(key: DatabaseColumn<Any>, value: Any) {
+    operator fun set(key: DatabaseColumn<*>, value: Any) {
         rowData[key.toString()] = value
+        changedFields.add(key)
     }
 
     /**
      * Save the modified data into the database
      */
     fun save() {
-        table.update {
+        table.where(table.primaryKey, this[table.primaryKey]!!).update {
             for (field in changedFields) {
                 val fieldData = this[field]
                 if (fieldData != null) {
@@ -86,7 +88,7 @@ class DatabaseRow(private val rowData: HashMap<String, Any>, private val table: 
 
         val newData = table.where(table.primaryKey, primaryKey).first()
         for (field in newData.rowData) {
-            rowData[field.key] = newData.rowData[field.value] as Any
+            rowData[field.key] = field.value
         }
     }
 

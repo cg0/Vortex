@@ -18,8 +18,8 @@ abstract class DatabaseTable {
         Vortex.database.execute(query)
     }
 
-    fun update(sqlDataBuilder: QueryBuilder.SqlDataBuilder): QueryBuilder {
-        return QueryBuilder(this).update(sqlDataBuilder)
+    fun update(sqlDataBuilder: QueryBuilder.SqlDataBuilder) {
+        QueryBuilder(this).update(sqlDataBuilder)
     }
 
     fun where(key: DatabaseColumn<*>, value: Any): QueryBuilder {

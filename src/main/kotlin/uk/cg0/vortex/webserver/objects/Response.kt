@@ -1,5 +1,6 @@
 package uk.cg0.vortex.webserver.objects
 
+import uk.cg0.vortex.Vortex
 import uk.cg0.vortex.template.Template
 import uk.cg0.vortex.webserver.enum.HttpContentType
 import uk.cg0.vortex.webserver.enum.HttpStatus
@@ -29,5 +30,9 @@ data class Response(var statusCode: HttpStatus,
         val mimeType = Files.probeContentType(file.toPath())
         contentType = HttpContentType.getByValue(mimeType)
         outputStream.write(file.readBytes())
+    }
+
+    fun createSession() {
+        cookies["session"] = Vortex.createSession()
     }
 }

@@ -147,18 +147,6 @@ class QueryBuildTest {
     }
 
     @Test
-    fun `Can we update the name of all rows from foo to bar in a database table`() {
-        val builder = QueryBuilder(TestTable)
-        val query = builder.where(TestTable.name, "foo").update {
-            it[TestTable.name] = "bar"
-        }.toDatabaseQuery()
-
-        assertEquals("UPDATE `tests` SET name=? WHERE tests.name = ?", query.query)
-        assertEquals("bar", query.data[0])
-        assertEquals("foo", query.data[1])
-    }
-
-    @Test
     fun `Can we run a join on two tables`() {
         val builder = QueryBuilder(TestTable)
         val query = builder.join(TestTable.name, "=", OtherTable.name).toDatabaseQuery()
