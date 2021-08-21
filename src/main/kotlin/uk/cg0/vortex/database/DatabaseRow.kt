@@ -6,7 +6,7 @@ import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
-class DatabaseRow(private val rowData: HashMap<String, Any>, private val table: DatabaseTable) {
+class DatabaseRow(private val rowData: HashMap<String, Any>, val table: DatabaseTable) {
     private val changedFields = ArrayList<DatabaseColumn<*>>()
     private val relational = HashMap<DatabaseRelation<*>, Any>()
 
@@ -98,5 +98,12 @@ class DatabaseRow(private val rowData: HashMap<String, Any>, private val table: 
 
     fun keys(): MutableSet<String> {
         return rowData.keys
+    }
+
+    override operator fun equals(other: Any?): Boolean {
+        if (other is DatabaseRow) {
+            return rowData == other.rowData
+        }
+        return false
     }
 }
